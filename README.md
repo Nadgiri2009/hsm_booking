@@ -91,8 +91,8 @@ ng serve
 Access the app at:
 👉 http://localhost:4200
 
-🌐 API Endpoints
-🔓 Public APIs
+**🌐 API Endpoints
+🔓 Public APIs**
 Method	Endpoint	Description
 GET	/api/premises/	List premises
 GET	/api/premises/{id}/slots/	Get slots
@@ -105,7 +105,8 @@ POST	/api/cancellations/request/	Request cancellation
 POST	/api/cancellations/verify-otp/	Verify OTP
 POST	/api/complaints/	Submit complaint
 POST	/api/auth/login/	Admin login
-🔐 Admin APIs (JWT Required)
+
+**🔐 Admin APIs (JWT Required)**
 Method	Endpoint	Description
 GET/POST/PUT	/api/premises/	Manage premises
 GET/POST/PUT	/api/premises/holidays/	Manage holidays
