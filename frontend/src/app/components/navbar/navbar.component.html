@@ -1,0 +1,53 @@
+<nav class="navbar">
+  <div class="navbar-top">
+    <div class="navbar-brand">
+      <img src="assets/images/logo.png" alt="SMC Logo" class="logo" />
+      <div class="brand-text">
+        <span class="brand-main">{{ 'HOME.WELCOME' | translate }}</span>
+        <span class="brand-sub">{{ 'HOME.SUBTITLE' | translate }}</span>
+      </div>
+    </div>
+    <div class="navbar-actions">
+      <button class="lang-toggle" (click)="toggleLanguage()" title="Switch Language">
+        <mat-icon>language</mat-icon>
+        <span>{{ currentLang === 'en' ? 'मराठी' : 'English' }}</span>
+      </button>
+      <button mat-raised-button color="primary" routerLink="/booking" class="book-btn">
+        <mat-icon>event</mat-icon>
+        {{ 'HOME.BOOK_NOW' | translate }}
+      </button>
+    </div>
+    <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+      <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  </div>
+
+  <div class="navbar-bottom" [class.open]="mobileMenuOpen">
+    <ul class="nav-links">
+      <li *ngFor="let link of navLinks">
+        <a [routerLink]="link.route" routerLinkActive="active" [routerLinkActiveOptions]="{exact: link.route === '/'}" (click)="mobileMenuOpen = false">
+          <mat-icon>{{ link.icon }}</mat-icon>
+          {{ link.label | translate }}
+        </a>
+      </li>
+      <li *ngIf="!isAdminLoggedIn">
+        <a routerLink="/admin/login" routerLinkActive="active" (click)="mobileMenuOpen = false">
+          <mat-icon>lock</mat-icon>
+          {{ 'NAV.ADMIN_LOGIN' | translate }}
+        </a>
+      </li>
+      <li *ngIf="isAdminLoggedIn">
+        <a routerLink="/admin/dashboard" routerLinkActive="active">
+          <mat-icon>dashboard</mat-icon>
+          {{ 'ADMIN.DASHBOARD' | translate }}
+        </a>
+      </li>
+      <li *ngIf="isAdminLoggedIn">
+        <a href="#" (click)="$event.preventDefault(); logout()">
+          <mat-icon>logout</mat-icon>
+          {{ 'ADMIN.LOGOUT' | translate }}
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>

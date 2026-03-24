@@ -1,0 +1,108 @@
+<div class="dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <h1>{{ 'ADMIN.DASHBOARD' | translate }}</h1>
+      <p>Hutatma Smruti Mandir — Solapur Municipal Corporation</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button routerLink="/print-booking"><mat-icon>print</mat-icon> Print Receipt</button>
+      <button mat-raised-button color="warn" (click)="null"><mat-icon>logout</mat-icon> Logout</button>
+    </div>
+  </div>
+
+  <div class="dashboard-content" *ngIf="!isLoading">
+    <!-- Stats Cards -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <mat-card *ngFor="let card of statsCards" class="stat-card hover-card" [routerLink]="card.route">
+          <div class="stat-icon" [style.background]="card.color + '15'" [style.color]="card.color">
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ getStatValue(card.key) }}</div>
+            <div class="stat-label">{{ card.label }}</div>
+          </div>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Management Cards -->
+    <section>
+      <h2 class="section-h">Quick Access</h2>
+      <div class="mgmt-grid">
+        <mat-card *ngFor="let card of managementCards" class="mgmt-card hover-card" [routerLink]="card.route">
+          <div class="mgmt-icon" [style.background]="card.color" >
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <div class="mgmt-info">
+            <h3>{{ card.label }}</h3>
+            <p>{{ card.desc }}</p>
+          </div>
+          <mat-icon class="mgmt-arrow">arrow_forward_ios</mat-icon>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Recent Bookings Table -->
+    <section>
+      <div class="table-header">
+        <h2 class="section-h">Recent Bookings</h2>
+        <button mat-stroked-button routerLink="/admin/bookings">View All <mat-icon>open_in_new</mat-icon></button>
+      </div>
+
+      <mat-card class="table-card">
+        <div *ngIf="recentBookings.length === 0" class="empty-state">
+          <mat-icon>event_busy</mat-icon>
+          <p>No recent bookings found</p>
+        </div>
+
+        <table mat-table [dataSource]="recentBookings" *ngIf="recentBookings.length > 0" class="full-width">
+          <ng-container matColumnDef="bookingId">
+            <th mat-header-cell *matHeaderCellDef>Booking ID</th>
+            <td mat-cell *matCellDef="let row">{{ row.bookingId }}</td>
+          </ng-container>
+          <ng-container matColumnDef="applicant">
+            <th mat-header-cell *matHeaderCellDef>Applicant</th>
+            <td mat-cell *matCellDef="let row">{{ row.applicantName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="premise">
+            <th mat-header-cell *matHeaderCellDef>Premise</th>
+            <td mat-cell *matCellDef="let row">{{ row.premiseName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="dates">
+            <th mat-header-cell *matHeaderCellDef>Dates</th>
+            <td mat-cell *matCellDef="let row">{{ row.startDate }} to {{ row.endDate }}</td>
+          </ng-container>
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>Amount</th>
+            <td mat-cell *matCellDef="let row">₹{{ row.totalPayable | number:'1.2-2' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let row">
+              <span [class]="'badge-' + (row.status === 'approved' ? 'success' : row.status === 'rejected' ? 'danger' : 'warning')">
+                {{ row.status | titlecase }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-icon-button color="primary" [routerLink]="['/admin/bookings']" matTooltip="View Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card>
+    </section>
+  </div>
+
+  <div class="loading-center" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+    <p>Loading dashboard...</p>
+  </div>
+</div>

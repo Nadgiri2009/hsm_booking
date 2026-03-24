@@ -1,0 +1,301 @@
+<div class="booking-page">
+  <div class="booking-header">
+    <h1>{{ 'BOOKING.TITLE' | translate }}</h1>
+    <p>Solapur Municipal Corporation — Hutatma Smruti Mandir</p>
+  </div>
+
+  <div class="booking-container" *ngIf="currentStep < 6">
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step-item" *ngFor="let step of ['Premise','Date & Time','Summary','Applicant','Bank','Payment']; let i = index"
+           [class.active]="currentStep === i" [class.done]="currentStep > i">
+        <div class="step-circle">{{ currentStep > i ? '✓' : i + 1 }}</div>
+        <span>{{ step }}</span>
+      </div>
+    </div>
+
+    <mat-card class="step-card">
+      <mat-card-content>
+        <!-- STEP 0: Premise Selection -->
+        <div *ngIf="currentStep === 0">
+          <h2 class="step-title">{{ 'BOOKING.STEP_PREMISE' | translate }}</h2>
+          <form [formGroup]="premiseForm">
+            <div class="premises-list" *ngIf="!isLoading">
+              <div class="premise-option" *ngFor="let premise of premises"
+                   [class.selected]="premiseForm.value.premiseId === premise.id"
+                   (click)="premiseForm.patchValue({premiseId: premise.id}); onPremiseSelect(premise.id)">
+                <mat-icon>{{ premise.icon || 'location_on' }}</mat-icon>
+                <div class="premise-info">
+                  <h3>{{ premise.name }}</h3>
+                  <p>Capacity: {{ premise.capacity }} guests | Base Rate: ₹{{ premise.baseRate }}/day</p>
+                </div>
+                <span class="badge-success" *ngIf="premise.isAvailable">Available</span>
+              </div>
+            </div>
+            <div *ngIf="isLoading" class="loading-center">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 1: Date & Time -->
+        <div *ngIf="currentStep === 1">
+          <h2 class="step-title">{{ 'BOOKING.STEP_DATETIME' | translate }}</h2>
+          <form [formGroup]="dateTimeForm" class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.SELECT_SLOT' | translate }}</mat-label>
+              <mat-select formControlName="slotId" (selectionChange)="onDateChange()">
+                <mat-option *ngFor="let slot of timeSlots" [value]="slot.id">
+                  {{ slot.name }} ({{ slot.startTime }} - {{ slot.endTime }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.SELECT_DATE' | translate }} (Start)</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="startDate"
+                     [matDatepickerFilter]="isDateBooked" (dateChange)="onDateChange()" />
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.SELECT_DATE' | translate }} (End)</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="endDate"
+                     [matDatepickerFilter]="isDateBooked" (dateChange)="onDateChange()" />
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+
+            <div class="availability-legend">
+              <span><span class="dot green"></span> Available</span>
+              <span><span class="dot red"></span> Booked (this slot)</span>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 2: Booking Summary -->
+        <div *ngIf="currentStep === 2">
+          <h2 class="step-title">{{ 'BOOKING.STEP_SUMMARY' | translate }}</h2>
+          <div class="summary-card" *ngIf="calculation">
+            <div class="summary-row">
+              <span>Premise</span><strong>{{ selectedPremise?.name }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>{{ 'BOOKING.TOTAL_DAYS' | translate }}</span><strong>{{ calculation.totalDays }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>{{ 'BOOKING.BASE_RENT' | translate }}</span><strong>₹{{ calculation.baseRent | number:'1.2-2' }}</strong>
+            </div>
+            <div class="summary-row" *ngIf="calculation.holidayCharges">
+              <span>{{ 'BOOKING.HOLIDAY_CHARGES' | translate }}</span><strong>₹{{ calculation.holidayCharges | number:'1.2-2' }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>{{ 'BOOKING.SECURITY_DEPOSIT' | translate }}</span><strong>₹{{ calculation.securityDeposit | number:'1.2-2' }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>{{ 'BOOKING.CGST' | translate }}</span><strong>₹{{ calculation.cgst | number:'1.2-2' }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>{{ 'BOOKING.SGST' | translate }}</span><strong>₹{{ calculation.sgst | number:'1.2-2' }}</strong>
+            </div>
+            <div class="summary-row total">
+              <span>{{ 'BOOKING.TOTAL_PAYABLE' | translate }}</span>
+              <strong class="amount">₹{{ calculation.totalPayable | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Applicant Details -->
+        <div *ngIf="currentStep === 3">
+          <h2 class="step-title">{{ 'BOOKING.STEP_APPLICANT' | translate }}</h2>
+          <form [formGroup]="applicantForm" class="form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'BOOKING.APPLICANT_NAME' | translate }}</mat-label>
+              <input matInput formControlName="name" />
+              <mat-error *ngIf="applicantForm.get('name')?.hasError('required')">{{ 'COMMON.REQUIRED_FIELD' | translate }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'BOOKING.ADDRESS' | translate }}</mat-label>
+              <textarea matInput formControlName="address" rows="3"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.MOBILE' | translate }}</mat-label>
+              <input matInput formControlName="mobile" type="tel" maxlength="10" />
+              <mat-error *ngIf="applicantForm.get('mobile')?.hasError('pattern')">Enter valid 10-digit mobile</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.ALT_MOBILE' | translate }}</mat-label>
+              <input matInput formControlName="altMobile" type="tel" maxlength="10" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.EMAIL' | translate }}</mat-label>
+              <input matInput formControlName="email" type="email" />
+              <mat-error *ngIf="applicantForm.get('email')?.hasError('email')">Enter valid email</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.FUNCTION_NAME' | translate }}</mat-label>
+              <input matInput formControlName="functionName" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Function Type</mat-label>
+              <mat-select formControlName="functionType">
+                <mat-option value="wedding">Wedding</mat-option>
+                <mat-option value="reception">Reception</mat-option>
+                <mat-option value="birthday">Birthday</mat-option>
+                <mat-option value="conference">Conference</mat-option>
+                <mat-option value="exhibition">Exhibition</mat-option>
+                <mat-option value="cultural">Cultural Program</mat-option>
+                <mat-option value="other">Other</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.GUEST_COUNT' | translate }}</mat-label>
+              <input matInput formControlName="guestCount" type="number" min="1" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>{{ 'BOOKING.DETAILS' | translate }}</mat-label>
+              <textarea matInput formControlName="details" rows="2"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.ID_PROOF' | translate }}</mat-label>
+              <mat-select formControlName="idProofType">
+                <mat-option *ngFor="let type of idProofTypes" [value]="type">{{ type }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="file-upload">
+              <label>Upload {{ applicantForm.value.idProofType || 'ID Proof' }}</label>
+              <input type="file" accept=".jpg,.jpeg,.png,.pdf" (change)="onFileUpload($event)" />
+              <span *ngIf="uploadedFile" class="file-name">✓ {{ uploadedFile.name }}</span>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 4: Bank Details -->
+        <div *ngIf="currentStep === 4">
+          <h2 class="step-title">{{ 'BOOKING.STEP_BANK' | translate }}</h2>
+          <p class="step-desc">Bank details required for security deposit refund.</p>
+          <form [formGroup]="bankForm" class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.BANK_NAME' | translate }}</mat-label>
+              <input matInput formControlName="bankName" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.AC_HOLDER' | translate }}</mat-label>
+              <input matInput formControlName="accountHolder" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.AC_NUMBER' | translate }}</mat-label>
+              <input matInput formControlName="accountNumber" type="password" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Confirm Account Number</mat-label>
+              <input matInput formControlName="confirmAccountNumber" />
+              <mat-error *ngIf="bankForm.hasError('accountMismatch')">Account numbers don't match</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.IFSC' | translate }}</mat-label>
+              <input matInput formControlName="ifsc" style="text-transform:uppercase;" />
+              <mat-error *ngIf="bankForm.get('ifsc')?.hasError('pattern')">Enter valid IFSC code</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.BRANCH' | translate }}</mat-label>
+              <input matInput formControlName="branch" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ 'BOOKING.MICR' | translate }}</mat-label>
+              <input matInput formControlName="micr" maxlength="9" />
+            </mat-form-field>
+          </form>
+        </div>
+
+        <!-- STEP 5: Payment -->
+        <div *ngIf="currentStep === 5">
+          <h2 class="step-title">{{ 'BOOKING.STEP_PAYMENT' | translate }}</h2>
+          <form [formGroup]="paymentForm">
+            <div class="payment-modes">
+              <div *ngFor="let mode of paymentModes" class="payment-mode"
+                   [class.selected]="paymentForm.value.paymentMode === mode.value"
+                   (click)="paymentForm.patchValue({paymentMode: mode.value})">
+                <mat-icon>{{ mode.icon }}</mat-icon>
+                <span>{{ mode.label }}</span>
+              </div>
+            </div>
+
+            <!-- QR Placeholder -->
+            <div class="qr-section" *ngIf="paymentForm.value.paymentMode === 'qr_payment'">
+              <div class="qr-placeholder">
+                <mat-icon style="font-size: 80px; color: #ccc;">qr_code_2</mat-icon>
+                <p>QR Code will be displayed after booking confirmation</p>
+              </div>
+            </div>
+
+            <!-- Bank Transfer Info -->
+            <div class="bank-transfer-section" *ngIf="paymentForm.value.paymentMode === 'bank_transfer'">
+              <div class="bank-info-card">
+                <h3>Transfer Details</h3>
+                <p><strong>Bank:</strong> State Bank of India</p>
+                <p><strong>Account Name:</strong> Solapur Municipal Corporation - HSM</p>
+                <p><strong>Account No:</strong> XXXXXXXXXXXXXXXX</p>
+                <p><strong>IFSC:</strong> SBIN0XXXXXX</p>
+                <p class="notice">⚠️ Include Booking Reference Number in transaction remarks</p>
+              </div>
+            </div>
+
+            <div class="terms-check">
+              <mat-checkbox formControlName="agreeTerms" color="primary">
+                I have read and agree to the <a routerLink="/about">Terms & Conditions</a>
+              </mat-checkbox>
+            </div>
+
+            <div class="summary-mini" *ngIf="calculation">
+              <strong>Total Payable: ₹{{ calculation.totalPayable | number:'1.2-2' }}</strong>
+            </div>
+          </form>
+        </div>
+      </mat-card-content>
+
+      <!-- Navigation Buttons -->
+      <mat-card-actions class="step-actions">
+        <button mat-stroked-button (click)="prevStep()" *ngIf="currentStep > 0" [disabled]="isLoading">
+          <mat-icon>arrow_back</mat-icon> {{ 'BOOKING.PREVIOUS' | translate }}
+        </button>
+        <span class="spacer"></span>
+        <button mat-raised-button color="primary" (click)="currentStep < 5 ? nextStep() : submitBooking()"
+                [disabled]="!isStepValid() || isLoading">
+          <mat-spinner diameter="18" *ngIf="isLoading"></mat-spinner>
+          {{ currentStep < 5 ? ('BOOKING.NEXT' | translate) : ('BOOKING.SUBMIT' | translate) }}
+          <mat-icon *ngIf="!isLoading">{{ currentStep < 5 ? 'arrow_forward' : 'check' }}</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Success Screen -->
+  <div class="success-screen" *ngIf="currentStep === 6">
+    <mat-card class="success-card">
+      <div class="success-icon"><mat-icon>check_circle</mat-icon></div>
+      <h2>Booking Submitted Successfully!</h2>
+      <p>Your booking ID is: <strong>{{ bookingId }}</strong></p>
+      <p>You will receive a confirmation SMS/email after admin approval.</p>
+      <div class="success-actions">
+        <button mat-raised-button color="primary" (click)="printReceipt()">
+          <mat-icon>print</mat-icon> Print Receipt
+        </button>
+        <button mat-stroked-button routerLink="/">
+          <mat-icon>home</mat-icon> Back to Home
+        </button>
+      </div>
+    </mat-card>
+  </div>
+</div>

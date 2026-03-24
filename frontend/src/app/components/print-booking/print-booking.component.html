@@ -1,0 +1,110 @@
+<div class="print-page">
+  <div class="page-header no-print">
+    <h1>Print Booking Details</h1>
+    <p>Search by Booking ID or Mobile Number</p>
+  </div>
+
+  <div class="search-section no-print">
+    <mat-card class="search-card">
+      <form [formGroup]="searchForm" (ngSubmit)="search()" class="search-form">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Booking ID or Mobile Number</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput formControlName="query" placeholder="e.g. HSM2024001 or 9876543210" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="submit" [disabled]="searchForm.invalid || isLoading">
+          <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+          <span *ngIf="!isLoading"><mat-icon>search</mat-icon> Search</span>
+        </button>
+      </form>
+    </mat-card>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box no-print" *ngIf="error">
+    <mat-icon>error_outline</mat-icon> {{ error }}
+  </div>
+
+  <!-- Booking Receipt -->
+  <div class="receipt-wrapper" *ngIf="booking" id="receipt">
+    <div class="receipt">
+      <!-- Receipt Header -->
+      <div class="receipt-header">
+        <img src="assets/images/logo.png" alt="SMC" class="receipt-logo" />
+        <div class="receipt-title">
+          <h2>Solapur Municipal Corporation</h2>
+          <h3>Hutatma Smruti Mandir</h3>
+          <p>Online Booking Receipt</p>
+        </div>
+        <div class="receipt-stamp">
+          <span [class]="'badge-' + (booking.status === 'approved' ? 'success' : booking.status === 'rejected' ? 'danger' : 'warning')">
+            {{ booking.status | uppercase }}
+          </span>
+        </div>
+      </div>
+
+      <div class="receipt-divider"></div>
+
+      <!-- Booking Info -->
+      <div class="receipt-body">
+        <div class="info-section">
+          <h4>Booking Information</h4>
+          <div class="info-grid">
+            <div class="info-row"><span>Booking ID</span><strong>{{ booking.bookingId }}</strong></div>
+            <div class="info-row"><span>Premise</span><strong>{{ booking.premiseName }}</strong></div>
+            <div class="info-row"><span>Start Date</span><strong>{{ booking.startDate | date:'dd/MM/yyyy' }}</strong></div>
+            <div class="info-row"><span>End Date</span><strong>{{ booking.endDate | date:'dd/MM/yyyy' }}</strong></div>
+            <div class="info-row"><span>Slot</span><strong>{{ booking.slotName }}</strong></div>
+            <div class="info-row"><span>Function</span><strong>{{ booking.functionName }}</strong></div>
+            <div class="info-row"><span>Guests</span><strong>{{ booking.guestCount }}</strong></div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>Applicant Details</h4>
+          <div class="info-grid">
+            <div class="info-row"><span>Name</span><strong>{{ booking.applicantName }}</strong></div>
+            <div class="info-row"><span>Mobile</span><strong>{{ booking.mobile }}</strong></div>
+            <div class="info-row"><span>Email</span><strong>{{ booking.email }}</strong></div>
+          </div>
+        </div>
+
+        <div class="info-section payment-section">
+          <h4>Payment Details</h4>
+          <div class="info-grid">
+            <div class="info-row"><span>Total Amount</span><strong>₹{{ booking.totalPayable | number:'1.2-2' }}</strong></div>
+            <div class="info-row"><span>Payment Status</span>
+              <span [class]="'badge-' + (booking.paymentStatus === 'paid' ? 'success' : 'warning')">
+                {{ booking.paymentStatus | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="receipt-footer">
+        <p>Booking Date: {{ booking.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p>This is a computer generated receipt.</p>
+        <p><strong>Solapur Municipal Corporation | hsm.booking@smc.gov.in</strong></p>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="receipt-actions no-print">
+      <button mat-stroked-button (click)="downloadPDF()">
+        <mat-icon>download</mat-icon> Download PDF
+      </button>
+      <button mat-raised-button color="primary" (click)="printReceipt()">
+        <mat-icon>print</mat-icon> Print Receipt
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    .receipt-wrapper { padding: 0; }
+    body { background: #fff; }
+  }
+</style>

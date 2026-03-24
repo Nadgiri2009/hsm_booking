@@ -1,0 +1,90 @@
+<div class="login-page">
+  <div class="login-split">
+    <!-- Left Brand Panel -->
+    <div class="login-brand">
+      <div class="brand-content">
+        <img src="assets/images/logo.png" alt="SMC Logo" class="brand-logo" />
+        <h1>Hutatma Smruti Mandir</h1>
+        <h2>Admin Portal</h2>
+        <p>Solapur Municipal Corporation</p>
+        <div class="brand-features">
+          <div class="feature"><mat-icon>security</mat-icon><span>Secure Access</span></div>
+          <div class="feature"><mat-icon>dashboard</mat-icon><span>Full Dashboard</span></div>
+          <div class="feature"><mat-icon>manage_accounts</mat-icon><span>Booking Management</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Login Form -->
+    <div class="login-form-side">
+      <mat-card class="login-card" *ngIf="!showForgotPassword">
+        <mat-card-header>
+          <mat-card-title>Administrator Login</mat-card-title>
+          <mat-card-subtitle>Enter your credentials to access the dashboard</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form [formGroup]="loginForm" (ngSubmit)="login()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email Address</mat-label>
+              <mat-icon matPrefix>email</mat-icon>
+              <input matInput type="email" formControlName="email" placeholder="admin@smc.gov.in" />
+              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Valid email required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Password</mat-label>
+              <mat-icon matPrefix>lock</mat-icon>
+              <input matInput [type]="showPassword ? 'text' : 'password'" formControlName="password" />
+              <button mat-icon-button matSuffix type="button" (click)="showPassword = !showPassword">
+                <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </mat-form-field>
+
+            <div class="login-options">
+              <mat-checkbox formControlName="rememberMe" color="primary">Remember me</mat-checkbox>
+              <a href="#" (click)="$event.preventDefault(); showForgotPassword = true" class="forgot-link">
+                Forgot Password?
+              </a>
+            </div>
+
+            <button mat-raised-button color="primary" type="submit" class="login-btn"
+                    [disabled]="loginForm.invalid || isLoading">
+              <mat-spinner diameter="18" *ngIf="isLoading"></mat-spinner>
+              <span *ngIf="!isLoading"><mat-icon>login</mat-icon> Login</span>
+            </button>
+          </form>
+        </mat-card-content>
+
+        <mat-card-footer>
+          <p class="footer-note">
+            <mat-icon>home</mat-icon>
+            <a routerLink="/">Back to Public Portal</a>
+          </p>
+        </mat-card-footer>
+      </mat-card>
+
+      <!-- Forgot Password Form -->
+      <mat-card class="login-card" *ngIf="showForgotPassword">
+        <mat-card-header>
+          <mat-card-title>Reset Password</mat-card-title>
+          <mat-card-subtitle>Enter your email to receive reset instructions</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email Address</mat-label>
+            <mat-icon matPrefix>email</mat-icon>
+            <input matInput type="email" [(ngModel)]="forgotEmail" placeholder="admin@smc.gov.in" />
+          </mat-form-field>
+          <div class="forgot-actions">
+            <button mat-stroked-button (click)="showForgotPassword = false">Back to Login</button>
+            <button mat-raised-button color="primary" (click)="sendForgotPassword()" [disabled]="!forgotEmail || forgotLoading">
+              <mat-spinner diameter="18" *ngIf="forgotLoading"></mat-spinner>
+              <span *ngIf="!forgotLoading">Send Reset Link</span>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

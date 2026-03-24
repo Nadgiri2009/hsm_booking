@@ -1,0 +1,96 @@
+<!-- Hero Image Slider -->
+<section class="slider-section">
+  <div class="slider-container">
+    <div class="slider-track" [style.transform]="'translateX(-' + currentSlide * 100 + '%)'">
+      <div class="slide" *ngFor="let slide of slides">
+        <img [src]="slide.image" [alt]="slide.title" loading="lazy" />
+        <div class="slide-overlay">
+          <div class="slide-content">
+            <h1>{{ slide.title }}</h1>
+            <p>{{ slide.subtitle }}</p>
+            <div class="slide-actions">
+              <button mat-raised-button routerLink="/booking" class="btn-book">
+                <mat-icon>event</mat-icon>
+                {{ 'HOME.BOOK_NOW' | translate }}
+              </button>
+              <button mat-stroked-button routerLink="/about" class="btn-learn">
+                Learn More
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slider Controls -->
+    <button class="slider-btn prev" (click)="goToSlide((currentSlide - 1 + slides.length) % slides.length)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button class="slider-btn next" (click)="goToSlide((currentSlide + 1) % slides.length)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <div class="slider-dots">
+      <button *ngFor="let slide of slides; let i = index" class="dot" [class.active]="i === currentSlide" (click)="goToSlide(i)"></button>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Links -->
+<section class="quick-links-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>{{ 'HOME.QUICK_LINKS' | translate }}</h2>
+    </div>
+    <div class="cards-grid">
+      <a *ngFor="let link of quickLinks" [routerLink]="link.route" class="quick-card hover-card">
+        <div class="quick-card-icon" [style.background]="link.color + '15'" [style.color]="link.color">
+          <mat-icon>{{ link.icon }}</mat-icon>
+        </div>
+        <span>{{ link.labelKey | translate }}</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Premises & Facilities -->
+<section class="premises-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>{{ 'HOME.PREMISES' | translate }}</h2>
+      <p>World-class facilities for your memorable events</p>
+    </div>
+    <div class="premises-grid">
+      <mat-card *ngFor="let premise of premises" class="premise-card hover-card" (click)="null">
+        <div class="premise-icon" [style.background]="premise.color + '15'" [style.color]="premise.color">
+          <mat-icon>{{ premise.icon }}</mat-icon>
+        </div>
+        <mat-card-header>
+          <mat-card-title>{{ premise.labelKey | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ premise.desc }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button [style.color]="premise.color" routerLink="/booking">
+            Book Now <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</section>
+
+<!-- Important Notices -->
+<section class="notices-section">
+  <div class="container">
+    <div class="section-title">
+      <h2>{{ 'HOME.IMPORTANT_NOTICES' | translate }}</h2>
+    </div>
+    <div class="notices-grid">
+      <div *ngFor="let notice of notices" class="notice-item" [class]="'notice-' + notice.type">
+        <mat-icon>{{ notice.icon }}</mat-icon>
+        <span>{{ notice.textKey | translate }}</span>
+      </div>
+    </div>
+  </div>
+</section>

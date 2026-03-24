@@ -1,0 +1,50 @@
+<footer class="footer">
+  <div class="footer-main">
+    <div class="footer-grid">
+      <!-- About -->
+      <div class="footer-col">
+        <h3>Hutatma Smruti Mandir</h3>
+        <p>{{ 'FOOTER.ADDRESS' | translate }}</p>
+        <p style="margin-top: 8px;">📞 +91-217-XXXXXXX</p>
+        <p>📧 hsm.booking&#64;smc.gov.in</p>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-col">
+        <h3>{{ 'FOOTER.QUICK_LINKS' | translate }}</h3>
+        <ul>
+          <li><a routerLink="/booking">{{ 'HOME.BOOKING_SYSTEM' | translate }}</a></li>
+          <li><a routerLink="/print-booking">{{ 'HOME.PRINT_RECEIPT' | translate }}</a></li>
+          <li><a routerLink="/about">{{ 'HOME.TERMS' | translate }}</a></li>
+          <li><a routerLink="/about">{{ 'HOME.RATE_CHART' | translate }}</a></li>
+          <li><a routerLink="/gallery">{{ 'NAV.GALLERY' | translate }}</a></li>
+          <li><a routerLink="/contact">{{ 'NAV.CONTACT' | translate }}</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div class="footer-col">
+        <h3>{{ 'FOOTER.CONTACT_US' | translate }}</h3>
+        <ul>
+          <li>Manager: +91-217-XXXXXX</li>
+          <li>Booking Dept: +91-217-XXXXXX</li>
+          <li>SMC Helpline: +91-217-XXXXXX</li>
+          <li>Complaints: +91-217-XXXXXX</li>
+        </ul>
+      </div>
+
+      <!-- Map -->
+      <div class="footer-col">
+        <h3>{{ 'FOOTER.LOCATE_US' | translate }}</h3>
+        <div class="map-container">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3801.5836363957687!2d75.89804871136354!3d17.669868383196466!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc5da78bc7dd5f1%3A0xf175aa31edaeaedd!2sHutatma%20Smruti%20Mandir!5e0!3m2!1sen!2sin!4v1773649170477!5m2!1sen!2sin" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>{{ 'FOOTER.DEVELOPED_BY' | translate }}</p>
+    <p class="copyright">© {{ currentYear }} Solapur Municipal Corporation. All Rights Reserved.</p>
+  </div>
+</footer>

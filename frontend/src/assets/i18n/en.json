@@ -1,0 +1,151 @@
+{
+  "nav": {
+    "brandTitle": "Hutatma Smruti Mandir",
+    "brandSub": "Solapur Municipal Corporation",
+    "home": "Home",
+    "about": "About",
+    "print": "Print Booking Details",
+    "gallery": "Gallery",
+    "contact": "Contact",
+    "adminLogin": "Admin Login",
+    "bookNow": "Book Now",
+    "dashboard": "Dashboard",
+    "logout": "Logout"
+  },
+  "home": {
+    "welcome": "Welcome to Hutatma Smruti Mandir",
+    "subtitle": "Online Booking System – Solapur Municipal Corporation",
+    "heroEyebrow": "Hutatma Smruti Mandir",
+    "sliderPrev": "Previous slide",
+    "sliderNext": "Next slide",
+    "goToSlide": "Go to slide",
+    "quickAccess": "Quick Access",
+    "quickAccessSub": "Fast entry points for frequently used actions.",
+    "quickLinks": "Quick Links",
+    "quickLinksSub": "Explore all shortcuts and services for users.",
+    "openNow": "Open now",
+    "premises": "Premises & Facilities",
+    "premisesSub": "Premises & Facilities for social, cultural, and official events.",
+    "bookSpace": "Book This Space",
+    "notices": "Important Notices",
+    "noticesSub": "Please review these instructions before proceeding.",
+    "slides": {
+      "s1": {
+        "title": "Hutatma Smruti Mandir",
+        "subtitle": "A Heritage Venue for Your Special Events"
+      },
+      "s2": {
+        "title": "VIP Room & Banquet Hall",
+        "subtitle": "Elegant Spaces for Corporate & Social Events"
+      },
+      "s3": {
+        "title": "Art Gallery & Open Spaces",
+        "subtitle": "Inspiring Venues for Cultural Gatherings"
+      }
+    },
+    "links": {
+      "bookingSystem": "Booking System",
+      "printReceipt": "Print Receipt",
+      "premises": "Premises",
+      "gallery": "Gallery",
+      "contactUs": "Contact Us",
+      "about": "About",
+      "adminLogin": "Admin Login",
+      "bookingCancellation": "Booking Cancellation"
+    },
+    "premisesItems": {
+      "mandir": {
+        "name": "Hutatma Smruti Mandir",
+        "desc": "Main auditorium for large events. Capacity: 500 persons."
+      },
+      "vip": {
+        "name": "VIP Room",
+        "desc": "Exclusive space for corporate and VIP meetings."
+      },
+      "dining": {
+        "name": "Dining Hall",
+        "desc": "Spacious hall for banquets and receptions."
+      },
+      "gallery": {
+        "name": "Art Gallery",
+        "desc": "Perfect for exhibitions and cultural events."
+      },
+      "open": {
+        "name": "Open Spaces",
+        "desc": "Garden and outdoor venues for celebrations."
+      }
+    },
+    "noticeItems": {
+      "refund": "Refund will be processed within 7-10 working days after cancellation approval.",
+      "payment": "Payment confirmation will be sent via SMS and Email to registered number.",
+      "noRefresh": "Do not press Back or Refresh button during payment processing.",
+      "tnc": "Please read all Terms & Conditions carefully before proceeding to booking."
+    }
+  },
+  "booking": {
+    "selectPremise": "Select Premise",
+    "selectDate": "Select Date",
+    "selectSlot": "Select Time Slot",
+    "applicantDetails": "Applicant Details",
+    "bankDetails": "Bank Details",
+    "payment": "Payment",
+    "summary": "Booking Summary",
+    "baseRent": "Base Rent",
+    "holidayCharges": "Holiday Charges",
+    "securityDeposit": "Security Deposit",
+    "cgst": "CGST (9%)",
+    "sgst": "SGST (9%)",
+    "totalPayable": "Total Payable Amount",
+    "name": "Full Name",
+    "address": "Address",
+    "mobile": "Mobile Number",
+    "altMobile": "Alternate Mobile",
+    "email": "Email ID",
+    "functionName": "Function Name",
+    "functionType": "Function Type",
+    "guests": "Expected Guests",
+    "idProof": "ID Proof",
+    "aadhaar": "Aadhaar Card",
+    "pan": "PAN Card",
+    "bankName": "Bank Name",
+    "accountHolder": "Account Holder Name",
+    "accountNumber": "Account Number",
+    "ifsc": "IFSC Code",
+    "branch": "Branch Name",
+    "micr": "MICR Code",
+    "paymentMode": "Payment Mode",
+    "bankTransfer": "Bank Transfer",
+    "qrPayment": "QR Payment",
+    "proceed": "Proceed",
+    "back": "Back",
+    "submit": "Submit Booking"
+  },
+  "footer": {
+    "brandTitle": "Hutatma Smruti Mandir",
+    "address": "Solapur Municipal Corporation, Solapur – 413001, Maharashtra",
+    "quickLinks": "Quick Links",
+    "contact": "Contact Us",
+    "developed": "Developed & Powered by Solapur Municipal Corporation (SMC)",
+    "bookingCancellation": "Booking Cancellation",
+    "terms": "Terms & Conditions",
+    "bookingOffice": "Booking Office",
+    "helpdesk": "Helpdesk",
+    "emergency": "Emergency",
+    "locateUs": "Locate Us",
+    "cancelNote": "Need to cancel your booking?",
+    "cancelBooking": "Cancel Booking",
+    "cancelTermsTitle": "Cancellation Terms & Conditions",
+    "cancelTerm1": "60+ days before event: up to 90% refund",
+    "cancelTerm2": "30–59 days before event: up to 80% refund",
+    "cancelTerm3": "7–29 days before event: up to 50% refund",
+    "cancelTerm4": "Less than 7 days: no rent refund (security deposit as per rules)",
+    "cancelTerm5": "Cancellation request requires OTP verification",
+    "rights": "Solapur Municipal Corporation. All Rights Reserved."
+  },
+  "notices": {
+    "refund": "Refund will be processed within 7-10 working days.",
+    "payment": "Payment confirmation will be sent via SMS/Email.",
+    "noRefresh": "Do not press Back/Refresh during payment.",
+    "tnc": "Please read Terms & Conditions before booking."
+  }
+}
