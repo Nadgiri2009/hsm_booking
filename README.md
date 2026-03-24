@@ -78,7 +78,6 @@ python manage.py runserver
 
 Default Admin Credentials:
 Email: admin@solapurcorp.gov.in
-Password: ********
 
 **🔹 Frontend Setup (Angular)**
 cd frontend
