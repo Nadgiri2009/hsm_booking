@@ -169,4 +169,4 @@ Advanced analytics dashboard
 Mobile app (PWA or Native)
 
 **📄 License**
-This project is developed for Solapur Municipal Corporation (SMC) and is intended for internal/public service use.
+This project is developed for Solapur Municipal Corporation (SMC) and is intended for internal/public service use only. Copyright Prohibited.
