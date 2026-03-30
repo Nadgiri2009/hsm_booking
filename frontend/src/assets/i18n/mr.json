@@ -47,9 +47,11 @@
       "bookingSystem": "बुकिंग प्रणाली",
       "printReceipt": "पावती प्रिंट करा",
       "premises": "परिसर",
+      "premisesAbout": "परिसर व आमच्याबद्दल",
       "gallery": "गॅलरी",
       "contactUs": "संपर्क करा",
       "about": "आमच्याबद्दल",
+      "postComplaint": "तक्रार नोंदवा",
       "adminLogin": "प्रशासक लॉगिन",
       "bookingCancellation": "बुकिंग रद्द करा"
     },

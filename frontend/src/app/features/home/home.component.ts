@@ -570,10 +570,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   quickLinks = [
     { icon: '📅', labelKey: 'home.links.bookingSystem', route: '/booking' },
     { icon: '🧾', labelKey: 'home.links.printReceipt', route: '/print-booking' },
-    { icon: '🏛️', labelKey: 'home.links.premises', route: '/about' },
+    { icon: '🏛️', labelKey: 'home.links.premisesAbout', route: '/about' },
     { icon: '🖼️', labelKey: 'home.links.gallery', route: '/gallery' },
     { icon: '📞', labelKey: 'home.links.contactUs', route: '/contact' },
-    { icon: 'ℹ️', labelKey: 'home.links.about', route: '/about' },
+    { icon: '📝', labelKey: 'home.links.postComplaint', route: '/contact' },
     { icon: '👤', labelKey: 'home.links.adminLogin', route: '/admin/login' },
     { icon: '❌', labelKey: 'home.links.bookingCancellation', route: '/print-booking' }
   ];

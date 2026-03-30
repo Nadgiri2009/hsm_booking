@@ -32,6 +32,9 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {"production":{"buildTarget":"hsm-booking:build:production"},"development":{"buildTarget":"hsm-booking:build:development"}},
           "defaultConfiguration": "development"
         }

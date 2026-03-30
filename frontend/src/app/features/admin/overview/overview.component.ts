@@ -9,7 +9,7 @@ import { ApiService } from '../../../core/services/api.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="overview">
+    <div class="admin-overview">
       <!-- Stats Cards -->
       <div class="stats-grid">
         <div class="stat-card" *ngFor="let s of stats">
@@ -42,12 +42,13 @@ import { ApiService } from '../../../core/services/api.service';
           <table>
             <thead>
               <tr>
-                <th>Booking ID</th><th>Applicant</th><th>Premise</th>
+                <th>Sr. No.</th><th>Booking ID</th><th>Applicant</th><th>Premise</th>
                 <th>Date</th><th>Amount</th><th>Status</th><th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let b of filteredBookings">
+              <tr *ngFor="let b of filteredBookings; let i = index">
+                <td>{{ i + 1 }}</td>
                 <td>{{ b.booking_id }}</td>
                 <td>{{ b.name }}</td>
                 <td>{{ b.premise }}</td>
@@ -63,7 +64,7 @@ import { ApiService } from '../../../core/services/api.service';
     </div>
   `,
   styles: [`
-    .overview { display:flex; flex-direction:column; gap:1.5rem; }
+    .admin-overview { display:flex; flex-direction:column; gap:1.5rem; width:100%; }
     .stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
     .stat-card {
       background:white; border-radius:12px; padding:1.25rem;

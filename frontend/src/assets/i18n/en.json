@@ -47,9 +47,11 @@
       "bookingSystem": "Booking System",
       "printReceipt": "Print Receipt",
       "premises": "Premises",
+      "premisesAbout": "Premises & About",
       "gallery": "Gallery",
       "contactUs": "Contact Us",
       "about": "About",
+      "postComplaint": "Post a Complaint",
       "adminLogin": "Admin Login",
       "bookingCancellation": "Booking Cancellation"
     },

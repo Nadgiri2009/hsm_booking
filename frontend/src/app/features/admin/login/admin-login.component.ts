@@ -74,7 +74,19 @@ export class AdminLoginComponent {
     const { email, password, remember_me } = this.loginForm.value;
     this.auth.login(email, password, remember_me).subscribe({
       next: () => this.router.navigate(['/admin/dashboard']),
-      error: (err) => { this.isLoading = false; this.errorMsg = err?.error?.message || 'Invalid credentials.'; }
+      error: (err) => {
+        this.isLoading = false;
+        const apiDetail = err?.error?.detail || err?.error?.message || err?.message;
+        if (err?.status === 0) {
+          this.errorMsg = 'Unable to reach backend API. Start backend server on port 8000 and retry.';
+          return;
+        }
+        if (err?.status === 404) {
+          this.errorMsg = 'Login API route not found. Verify frontend proxy and backend server port.';
+          return;
+        }
+        this.errorMsg = apiDetail || 'Invalid credentials.';
+      }
     });
   }
 }
