@@ -32,6 +32,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%; /* prevent iOS font size inflation */
 }
 
 body {
@@ -41,6 +42,8 @@ body {
   flex-direction: column;
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   color: var(--ink);
+  overflow-x: hidden; /* prevent horizontal scroll on mobile */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
   background:
     radial-gradient(circle at 12% 14%, rgba(255, 229, 197, 0.9) 0, rgba(255, 229, 197, 0) 32%),
     radial-gradient(circle at 88% 8%, rgba(214, 241, 248, 0.92) 0, rgba(214, 241, 248, 0) 28%),
@@ -751,6 +754,37 @@ body .contact-page .btn-send:disabled {
   border-radius: 16px !important;
 }
 
+/* ─── Responsive Breakpoints ───────────────────────────────────────────────
+   Approach: progressive max-width overrides (desktop base → mobile override)
+   Breakpoints: 1024px | 900px | 768px | 640px | 425px | 375px | 320px
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* 1024px – large tablets / small laptops */
+@media (max-width: 1024px) {
+  body .page-header {
+    width: min(960px, calc(100% - 1.5rem)) !important;
+  }
+
+  body .about-page .container,
+  body .gallery-page .container,
+  body .contact-page .contact-body,
+  body .booking-page .booking-body,
+  body .overview,
+  body .search-results {
+    width: min(960px, calc(100% - 1.5rem)) !important;
+  }
+
+  body .sidebar {
+    width: 220px !important;
+  }
+
+  body .mgmt-grid,
+  body .actions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* 900px – tablets landscape */
 @media (max-width: 900px) {
   body .admin-layout {
     padding: 0.25rem;
@@ -763,11 +797,16 @@ body .contact-page .btn-send:disabled {
     top: 0.6rem;
     bottom: 0.6rem;
     z-index: 1100;
+    width: 252px !important;
   }
 
   body .sidebar.collapsed {
     transform: translateX(-112%) !important;
-    width: 252px !important;
+  }
+
+  body .admin-main {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   body .global-search-wrap,
@@ -779,12 +818,56 @@ body .contact-page .btn-send:disabled {
     grid-template-columns: 1fr !important;
     flex-direction: column !important;
   }
+
+  body .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
+/* 768px – tablets portrait */
+@media (max-width: 768px) {
+  body .page-header h1 {
+    font-size: clamp(1.5rem, 5vw, 2.4rem) !important;
+  }
+
+  body .page-header p {
+    font-size: 0.9rem !important;
+  }
+
+  body .stepper {
+    gap: 0.35rem !important;
+    padding: 0.75rem 0.5rem 0 !important;
+  }
+
+  body .step {
+    flex: 1 1 90px !important;
+    max-width: 120px !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  body .login-card {
+    padding: 1.4rem !important;
+  }
+
+  body .summary-table th,
+  body .summary-table td,
+  body td,
+  body th {
+    padding: 10px 12px !important;
+    font-size: 0.85rem !important;
+  }
+
+  body .table-wrap {
+    font-size: 0.85rem !important;
+  }
+}
+
+/* 640px – large phones */
 @media (max-width: 640px) {
   body .page-header {
     width: calc(100% - 0.7rem) !important;
-    border-radius: 22px !important;
+    border-radius: 18px !important;
+    padding: 1.5rem 1rem !important;
   }
 
   body .about-page .container,
@@ -799,6 +882,8 @@ body .contact-page .btn-send:disabled {
   body .overview,
   body .search-results {
     width: calc(100% - 0.7rem) !important;
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
   }
 
   body .stats-grid,
@@ -809,7 +894,8 @@ body .contact-page .btn-send:disabled {
   body .premise-cards,
   body .slot-grid,
   body .cards,
-  body .notice-grid {
+  body .notice-grid,
+  body .mgmt-grid {
     grid-template-columns: 1fr !important;
   }
 
@@ -820,5 +906,201 @@ body .contact-page .btn-send:disabled {
   body .success-actions,
   body .actions {
     flex-direction: column !important;
+  }
+
+  body .search-box button,
+  body .global-search-wrap button,
+  body .btn-next,
+  body .btn-submit,
+  body .btn-login,
+  body .btn-send {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  body .tab-switch button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  body .about-section,
+  body .contact-info,
+  body .contact-form,
+  body .action-cards,
+  body .table-section,
+  body .module-page,
+  body .search-results {
+    padding: 1rem !important;
+  }
+
+  body td,
+  body th {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+  }
+
+  body .status,
+  body .badge {
+    font-size: 0.7rem !important;
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  body .sidebar-nav a {
+    font-size: 0.88rem !important;
+    padding: 0.6rem 0.7rem !important;
+  }
+
+  body .admin-content {
+    padding: 0.5rem !important;
+  }
+
+  body .refund-info,
+  body .success-box,
+  body .error-box,
+  body .warning-box {
+    font-size: 0.88rem !important;
+    padding: 0.75rem !important;
+  }
+}
+
+/* 425px – large phones (iPhone 14 / Pixel) */
+@media (max-width: 425px) {
+  body .page-header {
+    width: 100% !important;
+    border-radius: 0 0 18px 18px !important;
+    margin: 0 auto 0 !important;
+    padding: 1.25rem 0.85rem !important;
+  }
+
+  body .page-header h1 {
+    font-size: 1.5rem !important;
+  }
+
+  body .page-header p {
+    font-size: 0.82rem !important;
+    max-width: 100% !important;
+  }
+
+  body .step {
+    flex: 1 1 72px !important;
+    max-width: 90px !important;
+    font-size: 0.72rem !important;
+  }
+
+  body .step-circle {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+  }
+
+  body .login-card {
+    padding: 1rem !important;
+    border-radius: 14px !important;
+  }
+
+  body .action-card,
+  body .stat-card {
+    padding: 0.8rem !important;
+  }
+
+  body .module-head h2 {
+    font-size: 1.1rem !important;
+  }
+
+  body input,
+  body select,
+  body textarea {
+    font-size: 1rem !important; /* prevents iOS auto-zoom */
+    min-height: 44px !important;
+  }
+
+  body .tab-switch {
+    gap: 0.4rem !important;
+  }
+
+  body .table-wrap {
+    border-radius: 10px !important;
+  }
+}
+
+/* 375px – standard mobile (iPhone SE / iPhone 13 mini) */
+@media (max-width: 375px) {
+  body .page-header h1 {
+    font-size: 1.3rem !important;
+    line-height: 1.15 !important;
+  }
+
+  body .stepper {
+    gap: 0.25rem !important;
+  }
+
+  body .step {
+    flex: 1 1 60px !important;
+    max-width: 75px !important;
+    padding: 0.6rem 0.3rem !important;
+  }
+
+  body .step-label {
+    font-size: 0.65rem !important;
+  }
+
+  body td,
+  body th {
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  body .action-cards,
+  body .about-section,
+  body .contact-form,
+  body .module-page {
+    padding: 0.75rem !important;
+  }
+
+  body .admin-content {
+    padding: 0.35rem !important;
+  }
+
+  body .btn-next,
+  body .btn-submit,
+  body .btn-login {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* 320px – smallest phones (iPhone SE 1st gen) */
+@media (max-width: 320px) {
+  html {
+    font-size: 14px;
+  }
+
+  body .page-header h1 {
+    font-size: 1.15rem !important;
+  }
+
+  body .step {
+    flex: 1 1 50px !important;
+    max-width: 64px !important;
+    padding: 0.5rem 0.2rem !important;
+  }
+
+  body .step-label {
+    display: none !important;
+  }
+
+  body .login-card {
+    padding: 0.75rem !important;
+  }
+
+  body td,
+  body th {
+    font-size: 0.7rem !important;
+  }
+
+  body .about-section,
+  body .contact-form,
+  body .module-page,
+  body .action-cards {
+    padding: 0.6rem !important;
   }
 }

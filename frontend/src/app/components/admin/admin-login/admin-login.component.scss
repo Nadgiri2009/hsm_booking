@@ -55,8 +55,48 @@ mat-card-content { padding-top: 16px !important; }
 
 .forgot-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
 
+/* 768px – tablets */
 @media (max-width: 768px) {
   .login-split { flex-direction: column; }
-  .login-brand { padding: 40px 24px; flex: none; }
-  .login-form-side { flex: none; padding: 24px; }
+  .login-brand { padding: 36px 24px; flex: none; min-height: auto;
+    .brand-features { display: none; } /* hide features list to save vertical space */
+  }
+  .login-form-side { flex: none; padding: 24px; width: 100%; }
+  .login-card { max-width: 100%; }
+}
+
+/* 640px – large phones */
+@media (max-width: 640px) {
+  .login-brand { padding: 28px 20px;
+    .brand-logo { width: 60px; height: 60px; margin-bottom: 14px; }
+    h1 { font-size: 1.4rem; } h2 { font-size: 1rem; } p { font-size: 0.85rem; margin-bottom: 0; }
+  }
+  .login-form-side { padding: 20px 16px; }
+  .login-card { border-radius: 12px !important; }
+  .login-btn { height: 48px !important; font-size: 0.95rem !important; }
+}
+
+/* 425px – large phones */
+@media (max-width: 425px) {
+  .login-brand { padding: 22px 16px;
+    h1 { font-size: 1.25rem; } h2 { font-size: 0.9rem; }
+  }
+  .login-form-side { padding: 16px 12px; }
+  .login-options { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .forgot-actions { flex-direction: column; gap: 8px;
+    button { width: 100%; }
+  }
+}
+
+/* 375px – standard mobile */
+@media (max-width: 375px) {
+  .login-brand { display: none; } /* remove brand panel for very small screens to show form immediately */
+  .login-form-side { min-height: 100vh; padding: 24px 14px; }
+  .login-card { padding: 4px !important; }
+}
+
+/* 320px – smallest phones */
+@media (max-width: 320px) {
+  .login-form-side { padding: 16px 10px; }
+  .login-btn { height: 44px !important; font-size: 0.88rem !important; }
 }

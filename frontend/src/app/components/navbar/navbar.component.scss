@@ -102,6 +102,14 @@
 @media (max-width: 768px) {
   .navbar-actions { display: none; }
   .mobile-menu-btn { display: flex; align-items: center; }
+  .navbar-top { padding: 8px 16px; }
+  .navbar-brand {
+    .logo { width: 44px; height: 44px; }
+    .brand-text {
+      .brand-main { font-size: 0.88rem; }
+      .brand-sub { font-size: 0.68rem; }
+    }
+  }
   .navbar-bottom {
     display: none;
     &.open { display: block; }
@@ -109,7 +117,45 @@
   .nav-links {
     flex-direction: column;
     align-items: stretch;
-    li a { border-bottom: 1px solid rgba(255,255,255,0.1); border-left: 3px solid transparent; padding: 14px 20px; }
+    li a {
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-left: 3px solid transparent;
+      padding: 14px 20px;
+      min-height: 48px; /* touch target */
+    }
     li a.active { border-left-color: var(--accent); border-bottom: none; }
   }
+}
+
+/* 425px – large phones */
+@media (max-width: 425px) {
+  .navbar-top { padding: 8px 12px; gap: 10px; }
+  .navbar-brand {
+    .logo { width: 38px; height: 38px; }
+    .brand-text {
+      .brand-main { font-size: 0.82rem; }
+      .brand-sub { display: none; }
+    }
+  }
+  .nav-links li a { padding: 13px 16px; font-size: 0.88rem; }
+}
+
+/* 375px – standard mobile */
+@media (max-width: 375px) {
+  .navbar-brand {
+    .logo { width: 34px; height: 34px; }
+    .brand-text .brand-main { font-size: 0.78rem; }
+  }
+  .mobile-menu-btn mat-icon { font-size: 24px; }
+  .nav-links li a { padding: 12px 14px; font-size: 0.85rem; }
+}
+
+/* 320px – smallest phones */
+@media (max-width: 320px) {
+  .navbar-top { padding: 6px 10px; }
+  .navbar-brand {
+    .logo { width: 30px; height: 30px; }
+    .brand-text .brand-main { font-size: 0.74rem; }
+  }
+  .nav-links li a { padding: 11px 12px; font-size: 0.82rem; }
 }
