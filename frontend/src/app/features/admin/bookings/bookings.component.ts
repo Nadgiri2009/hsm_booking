@@ -24,6 +24,7 @@ import { ApiService } from '../../../core/services/api.service';
         <table>
           <thead>
             <tr>
+              <th>Sr. No.</th>
               <th>Booking ID</th>
               <th>Applicant</th>
               <th>Premise</th>
@@ -33,7 +34,8 @@ import { ApiService } from '../../../core/services/api.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of paginatedRows">
+            <tr *ngFor="let row of paginatedRows; let index = index">
+              <td>{{ getSerialNumber(index) }}</td>
               <td>{{ row.booking_id }}</td>
               <td>{{ row.full_name || '-' }}</td>
               <td>{{ row.premise_name || '-' }}</td>
@@ -98,7 +100,7 @@ import { ApiService } from '../../../core/services/api.service';
 export class BookingsComponent {
   rows: any[] = [];
   filtered: any[] = [];
-  readonly pageSize = 20;
+  readonly pageSize = 10;
   currentPage = 1;
   query = '';
   loading = false;
@@ -147,6 +149,10 @@ export class BookingsComponent {
 
   get endItem(): number {
     return Math.min(this.currentPage * this.pageSize, this.filtered.length);
+  }
+
+  getSerialNumber(index: number): number {
+    return (this.currentPage - 1) * this.pageSize + index + 1;
   }
 
   goToPrevPage(): void {

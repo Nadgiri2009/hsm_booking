@@ -31,7 +31,7 @@ import { ApiService } from '../../../core/services/api.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of filtered">
+            <tr *ngFor="let row of paginatedRows">
               <td>{{ row.booking_id || row.booking }}</td>
               <td>{{ row.reason || '-' }}</td>
               <td>{{ row.refund_percentage || 0 }}%</td>
@@ -44,6 +44,17 @@ import { ApiService } from '../../../core/services/api.service';
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="pagination" *ngIf="filtered.length > pageSize">
+        <div class="page-info">
+          Showing {{ startItem }}-{{ endItem }} of {{ filtered.length }} cancellations
+        </div>
+        <div class="page-actions">
+          <button (click)="goToPrevPage()" [disabled]="currentPage === 1">Previous</button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <button (click)="goToNextPage()" [disabled]="currentPage === totalPages">Next</button>
+        </div>
       </div>
 
       <div class="no-results" *ngIf="filtered.length === 0">No results found</div>
@@ -69,11 +80,18 @@ import { ApiService } from '../../../core/services/api.service';
     .actions .reject { background:#c62828; color:#fff; }
     .actions button:disabled { opacity:.5; cursor:not-allowed; }
     .no-results { padding:1rem; border:1px dashed #d8dcf2; border-radius:8px; color:#5f6680; text-align:center; }
+    .pagination { display:flex; justify-content:space-between; align-items:center; gap:.8rem; margin-top:.9rem; flex-wrap:wrap; }
+    .page-info { font-size:.84rem; color:#5f6680; }
+    .page-actions { display:flex; align-items:center; gap:.55rem; font-size:.84rem; color:#2e3760; }
+    .page-actions button { border:1px solid rgba(18,93,110,.18); background:rgba(255,255,255,.84); color:var(--ocean-deep); border-radius:999px; padding:.35rem .7rem; cursor:pointer; font-size:.8rem; }
+    .page-actions button:disabled { opacity:.5; cursor:not-allowed; }
   `]
 })
 export class CancellationsComponent {
   rows: any[] = [];
   filtered: any[] = [];
+  readonly pageSize = 10;
+  currentPage = 1;
   query = '';
 
   constructor(private api: ApiService) {
@@ -85,10 +103,12 @@ export class CancellationsComponent {
       next: (res) => {
         this.rows = Array.isArray(res) ? res : (res?.results || []);
         this.filtered = [...this.rows];
+        this.currentPage = 1;
       },
       error: () => {
         this.rows = [];
         this.filtered = [];
+        this.currentPage = 1;
       }
     });
   }
@@ -96,6 +116,37 @@ export class CancellationsComponent {
   applyFilter(): void {
     const q = this.query.trim().toLowerCase();
     this.filtered = this.rows.filter(row => JSON.stringify(row).toLowerCase().includes(q));
+    this.currentPage = 1;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
+  }
+
+  get paginatedRows(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get startItem(): number {
+    if (this.filtered.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get endItem(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filtered.length);
+  }
+
+  goToPrevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
   }
 
   approve(row: any): void {
