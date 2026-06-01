@@ -2,10 +2,18 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-hsm-smc-solapur-change-in-production')
+# SECRET_KEY should be provided via environment in production
+SECRET_KEY = os.environ.get('SECRET_KEY') or config('SECRET_KEY', default=None)
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+if not SECRET_KEY:
+    if DEBUG:
+        # allow a default for local development when DEBUG=True
+        SECRET_KEY = 'django-insecure-hsm-smc-solapur-change-in-production'
+    else:
+        raise ImproperlyConfigured('The SECRET_KEY environment variable must be set in production')
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [

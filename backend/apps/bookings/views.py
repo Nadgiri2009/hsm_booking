@@ -144,5 +144,4 @@ class BookingViewSet(viewsets.ModelViewSet):
         return response
 
 
-class BookingViewSet(BookingViewSet):
-    pass
+# Removed accidental duplicate subclass definition of `BookingViewSet`.

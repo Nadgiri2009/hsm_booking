@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 120
+exclude = .venv,venv,apps/*/migrations,__pycache__,frontend
+# Relax a number of style checks for legacy code; consider gradually fixing these
+ignore = E501,E302,W191,E231,E401,E402,F401,F841,E701,E226,E127,E305,E301,E265,W293

@@ -7,8 +7,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import CustomTokenObtainPairSerializer, AdminUserSerializer
 
 class LoginView(TokenObtainPairView):
-    permission_classes = [AllowAny]
-    serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = (AllowAny,)  # type: ignore[assignment]
+    # mypy: TokenViewBase defines serializer_class as None by default; annotate to avoid a type error
+    serializer_class = CustomTokenObtainPairSerializer  # type: ignore[assignment]
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
