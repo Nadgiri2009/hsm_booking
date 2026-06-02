@@ -1,15 +1,21 @@
 from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Premise, PremiseRate, TimeSlot, Holiday, GalleryItem
+from rest_framework.views import APIView
+
+from .models import GalleryItem, Holiday, Premise, PremiseRate, TimeSlot
 from .serializers import (
-    PremiseListSerializer, PremiseDetailSerializer, PremiseRateSerializer,
-    TimeSlotSerializer, HolidaySerializer, GallerySerializer
+    GallerySerializer,
+    HolidaySerializer,
+    PremiseDetailSerializer,
+    PremiseListSerializer,
+    PremiseRateSerializer,
+    TimeSlotSerializer,
 )
 
 
 class PremiseListView(generics.ListAPIView):
     """Public: List all active premises"""
+
     queryset = Premise.objects.filter(is_active=True)
     serializer_class = PremiseListSerializer
     permission_classes = [permissions.AllowAny]
@@ -26,11 +32,11 @@ class PremiseTimeSlotsView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        return TimeSlot.objects.filter(premise_id=self.kwargs['pk'], is_active=True)
+        return TimeSlot.objects.filter(premise_id=self.kwargs["pk"], is_active=True)
 
 
 class HolidayListView(generics.ListAPIView):
-    queryset = Holiday.objects.all().order_by('date')
+    queryset = Holiday.objects.all().order_by("date")
     serializer_class = HolidaySerializer
     permission_classes = [permissions.AllowAny]
 
@@ -42,7 +48,7 @@ class GalleryListView(generics.ListAPIView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        item_type = self.request.query_params.get('type')
+        item_type = self.request.query_params.get("type")
         if item_type:
             qs = qs.filter(item_type=item_type)
         return qs
@@ -50,7 +56,7 @@ class GalleryListView(generics.ListAPIView):
 
 # Admin Views
 class AdminPremiseListCreateView(generics.ListCreateAPIView):
-    queryset = Premise.objects.all().order_by('sort_order')
+    queryset = Premise.objects.all().order_by("sort_order")
     serializer_class = PremiseDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -66,14 +72,14 @@ class AdminPremiseRatesView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return PremiseRate.objects.filter(premise_id=self.kwargs['pk'])
+        return PremiseRate.objects.filter(premise_id=self.kwargs["pk"])
 
     def perform_create(self, serializer):
-        serializer.save(premise_id=self.kwargs['pk'])
+        serializer.save(premise_id=self.kwargs["pk"])
 
 
 class AdminHolidayListCreateView(generics.ListCreateAPIView):
-    queryset = Holiday.objects.all().order_by('date')
+    queryset = Holiday.objects.all().order_by("date")
     serializer_class = HolidaySerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -89,7 +95,7 @@ class AdminTimeSlotsView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return TimeSlot.objects.filter(premise_id=self.kwargs['pk'])
+        return TimeSlot.objects.filter(premise_id=self.kwargs["pk"])
 
     def perform_create(self, serializer):
-        serializer.save(premise_id=self.kwargs['pk'])
+        serializer.save(premise_id=self.kwargs["pk"])

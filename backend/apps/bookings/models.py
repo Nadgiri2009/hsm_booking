@@ -1,17 +1,34 @@
+import uuid
+
 from django.db import models
 from django.utils import timezone
-import uuid
+
 from apps.premises.models import Premise, TimeSlot
+
 
 def generate_booking_id():
     from datetime import datetime
+
     return f"HSM{datetime.now().strftime('%Y%m%d')}{str(uuid.uuid4())[:4].upper()}"
 
+
 class Booking(models.Model):
-    STATUS_CHOICES = [('pending','Pending'),('approved','Approved'),('rejected','Rejected'),('cancelled','Cancelled')]
-    PAYMENT_MODE = [('bank_transfer','Bank Transfer'),('qr','QR Payment')]
-    ID_PROOF_CHOICES = [('aadhaar','Aadhaar'),('pan','PAN')]
-    FUNCTION_TYPES = [('marriage','Marriage'),('birthday','Birthday'),('corporate','Corporate'),('conference','Conference'),('exhibition','Exhibition'),('other','Other')]
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("cancelled", "Cancelled"),
+    ]
+    PAYMENT_MODE = [("bank_transfer", "Bank Transfer"), ("qr", "QR Payment")]
+    ID_PROOF_CHOICES = [("aadhaar", "Aadhaar"), ("pan", "PAN")]
+    FUNCTION_TYPES = [
+        ("marriage", "Marriage"),
+        ("birthday", "Birthday"),
+        ("corporate", "Corporate"),
+        ("conference", "Conference"),
+        ("exhibition", "Exhibition"),
+        ("other", "Other"),
+    ]
 
     booking_id = models.CharField(max_length=20, unique=True, db_index=True)
     premise = models.ForeignKey(Premise, on_delete=models.PROTECT)
@@ -31,7 +48,7 @@ class Booking(models.Model):
     expected_guests = models.PositiveIntegerField()
     id_proof_type = models.CharField(max_length=10, choices=ID_PROOF_CHOICES)
     id_proof_number = models.CharField(max_length=20)
-    id_proof_file = models.FileField(upload_to='id_proofs/', null=True, blank=True)
+    id_proof_file = models.FileField(upload_to="id_proofs/", null=True, blank=True)
 
     # Bank Details for Refund
     bank_name = models.CharField(max_length=200)
@@ -50,19 +67,21 @@ class Booking(models.Model):
     total_payable = models.DecimalField(max_digits=12, decimal_places=2)
 
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     admin_remarks = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved_at = models.DateTimeField(null=True, blank=True)
-    approved_by = models.ForeignKey('accounts.AdminUser', null=True, blank=True, on_delete=models.SET_NULL)
+    approved_by = models.ForeignKey(
+        "accounts.AdminUser", null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
-        db_table = 'Bookings'
+        db_table = "Bookings"
         indexes = [
-            models.Index(fields=['from_date', 'to_date']),
-            models.Index(fields=['premise', 'from_date']),
+            models.Index(fields=["from_date", "to_date"]),
+            models.Index(fields=["premise", "from_date"]),
         ]
 
     def save(self, *args, **kwargs):
@@ -71,13 +90,16 @@ class Booking(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.booking_id} - {self.full_name}'
+        return f"{self.booking_id} - {self.full_name}"
 
 
 class BookingMigration(models.Model):
     """Stores partial/incomplete booking data before final submission"""
+
     session_id = models.CharField(max_length=100, unique=True)
-    premise = models.ForeignKey(Premise, on_delete=models.CASCADE, null=True, blank=True)
+    premise = models.ForeignKey(
+        Premise, on_delete=models.CASCADE, null=True, blank=True
+    )
     slot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE, null=True, blank=True)
     from_date = models.DateField(null=True, blank=True)
     to_date = models.DateField(null=True, blank=True)
@@ -87,4 +109,4 @@ class BookingMigration(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'BookingMigrations'
+        db_table = "BookingMigrations"

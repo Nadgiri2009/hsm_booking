@@ -4,28 +4,46 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('complaints', '0001_initial'),
+        ("complaints", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ContactMessage',
+            name="ContactMessage",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('email', models.EmailField(max_length=254)),
-                ('mobile', models.CharField(max_length=10)),
-                ('subject', models.CharField(max_length=300)),
-                ('message', models.TextField()),
-                ('status', models.CharField(choices=[('new', 'New'), ('reviewed', 'Reviewed'), ('resolved', 'Resolved')], default='new', max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("email", models.EmailField(max_length=254)),
+                ("mobile", models.CharField(max_length=10)),
+                ("subject", models.CharField(max_length=300)),
+                ("message", models.TextField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("new", "New"),
+                            ("reviewed", "Reviewed"),
+                            ("resolved", "Resolved"),
+                        ],
+                        default="new",
+                        max_length=20,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'ContactMessages',
-                'ordering': ['-created_at'],
+                "db_table": "ContactMessages",
+                "ordering": ["-created_at"],
             },
         ),
     ]

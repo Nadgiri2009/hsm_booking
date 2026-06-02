@@ -6,54 +6,118 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('bookings', '0001_initial'),
+        ("bookings", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Cancellation',
+            name="Cancellation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('reason', models.TextField()),
-                ('cancellation_date', models.DateField(auto_now_add=True)),
-                ('refund_percentage', models.DecimalField(decimal_places=2, max_digits=5)),
-                ('refund_amount', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('status', models.CharField(choices=[('requested', 'Requested'), ('otp_verified', 'OTP Verified'), ('approved', 'Approved'), ('rejected', 'Rejected')], default='requested', max_length=20)),
-                ('otp', models.CharField(blank=True, max_length=6)),
-                ('otp_expiry', models.DateTimeField(blank=True, null=True)),
-                ('otp_verified', models.BooleanField(default=False)),
-                ('admin_remarks', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('booking', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='cancellation', to='bookings.booking')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("reason", models.TextField()),
+                ("cancellation_date", models.DateField(auto_now_add=True)),
+                (
+                    "refund_percentage",
+                    models.DecimalField(decimal_places=2, max_digits=5),
+                ),
+                ("refund_amount", models.DecimalField(decimal_places=2, max_digits=12)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("requested", "Requested"),
+                            ("otp_verified", "OTP Verified"),
+                            ("approved", "Approved"),
+                            ("rejected", "Rejected"),
+                        ],
+                        default="requested",
+                        max_length=20,
+                    ),
+                ),
+                ("otp", models.CharField(blank=True, max_length=6)),
+                ("otp_expiry", models.DateTimeField(blank=True, null=True)),
+                ("otp_verified", models.BooleanField(default=False)),
+                ("admin_remarks", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "booking",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="cancellation",
+                        to="bookings.booking",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'Cancellations',
+                "db_table": "Cancellations",
             },
         ),
         migrations.CreateModel(
-            name='Refund',
+            name="Refund",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('refund_amount', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('bank_name', models.CharField(max_length=200)),
-                ('account_holder', models.CharField(max_length=200)),
-                ('account_number', models.CharField(max_length=50)),
-                ('ifsc_code', models.CharField(max_length=15)),
-                ('utr_number', models.CharField(blank=True, max_length=50)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('processing', 'Processing'), ('completed', 'Completed'), ('failed', 'Failed')], default='pending', max_length=20)),
-                ('processed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('cancellation', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='refund', to='cancellations.cancellation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("refund_amount", models.DecimalField(decimal_places=2, max_digits=12)),
+                ("bank_name", models.CharField(max_length=200)),
+                ("account_holder", models.CharField(max_length=200)),
+                ("account_number", models.CharField(max_length=50)),
+                ("ifsc_code", models.CharField(max_length=15)),
+                ("utr_number", models.CharField(blank=True, max_length=50)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("processing", "Processing"),
+                            ("completed", "Completed"),
+                            ("failed", "Failed"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("processed_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "cancellation",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="refund",
+                        to="cancellations.cancellation",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'Refunds',
+                "db_table": "Refunds",
             },
         ),
     ]

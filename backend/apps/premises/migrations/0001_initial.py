@@ -6,74 +6,154 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Holiday',
+            name="Holiday",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('date', models.DateField(db_index=True, unique=True)),
-                ('charge_multiplier', models.DecimalField(decimal_places=2, default=1.5, max_digits=4)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("date", models.DateField(db_index=True, unique=True)),
+                (
+                    "charge_multiplier",
+                    models.DecimalField(decimal_places=2, default=1.5, max_digits=4),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'Holidays',
-                'ordering': ['date'],
+                "db_table": "Holidays",
+                "ordering": ["date"],
             },
         ),
         migrations.CreateModel(
-            name='Premise',
+            name="Premise",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('name_mr', models.CharField(blank=True, max_length=200)),
-                ('description', models.TextField(blank=True)),
-                ('capacity', models.PositiveIntegerField()),
-                ('base_rent', models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0)])),
-                ('security_deposit', models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0)])),
-                ('is_active', models.BooleanField(default=True)),
-                ('image', models.ImageField(blank=True, null=True, upload_to='premises/')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("name_mr", models.CharField(blank=True, max_length=200)),
+                ("description", models.TextField(blank=True)),
+                ("capacity", models.PositiveIntegerField()),
+                (
+                    "base_rent",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "security_deposit",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "image",
+                    models.ImageField(blank=True, null=True, upload_to="premises/"),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'Premises',
+                "db_table": "Premises",
             },
         ),
         migrations.CreateModel(
-            name='PremiseRate',
+            name="PremiseRate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rate_type', models.CharField(choices=[('weekday', 'Weekday'), ('weekend', 'Weekend'), ('holiday', 'Holiday')], max_length=50)),
-                ('multiplier', models.DecimalField(decimal_places=2, default=1.0, max_digits=4)),
-                ('effective_from', models.DateField()),
-                ('effective_to', models.DateField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('premise', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rates', to='premises.premise')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "rate_type",
+                    models.CharField(
+                        choices=[
+                            ("weekday", "Weekday"),
+                            ("weekend", "Weekend"),
+                            ("holiday", "Holiday"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "multiplier",
+                    models.DecimalField(decimal_places=2, default=1.0, max_digits=4),
+                ),
+                ("effective_from", models.DateField()),
+                ("effective_to", models.DateField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "premise",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rates",
+                        to="premises.premise",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'PremiseRates',
+                "db_table": "PremiseRates",
             },
         ),
         migrations.CreateModel(
-            name='TimeSlot',
+            name="TimeSlot",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('start_time', models.TimeField()),
-                ('end_time', models.TimeField()),
-                ('multiplier', models.DecimalField(decimal_places=2, default=1.0, max_digits=4)),
-                ('is_active', models.BooleanField(default=True)),
-                ('premise', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='time_slots', to='premises.premise')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("start_time", models.TimeField()),
+                ("end_time", models.TimeField()),
+                (
+                    "multiplier",
+                    models.DecimalField(decimal_places=2, default=1.0, max_digits=4),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "premise",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="time_slots",
+                        to="premises.premise",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'TimeSlots',
+                "db_table": "TimeSlots",
             },
         ),
     ]

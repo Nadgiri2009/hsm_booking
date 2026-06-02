@@ -4,31 +4,49 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Complaint',
+            name="Complaint",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('email', models.EmailField(max_length=254)),
-                ('mobile', models.CharField(max_length=10)),
-                ('booking_id', models.CharField(blank=True, max_length=20)),
-                ('subject', models.CharField(max_length=300)),
-                ('message', models.TextField()),
-                ('status', models.CharField(choices=[('open', 'Open'), ('in_progress', 'In Progress'), ('resolved', 'Resolved'), ('closed', 'Closed')], default='open', max_length=20)),
-                ('admin_response', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("email", models.EmailField(max_length=254)),
+                ("mobile", models.CharField(max_length=10)),
+                ("booking_id", models.CharField(blank=True, max_length=20)),
+                ("subject", models.CharField(max_length=300)),
+                ("message", models.TextField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("open", "Open"),
+                            ("in_progress", "In Progress"),
+                            ("resolved", "Resolved"),
+                            ("closed", "Closed"),
+                        ],
+                        default="open",
+                        max_length=20,
+                    ),
+                ),
+                ("admin_response", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'Complaints',
-                'ordering': ['-created_at'],
+                "db_table": "Complaints",
+                "ordering": ["-created_at"],
             },
         ),
     ]

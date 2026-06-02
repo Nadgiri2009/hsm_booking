@@ -1,8 +1,9 @@
-import os
-import django
 import json
+import os
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from apps.premises.models import Premise

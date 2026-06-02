@@ -6,77 +6,188 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('premises', '0001_initial'),
+        ("premises", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BookingMigration',
+            name="BookingMigration",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_id', models.CharField(max_length=100, unique=True)),
-                ('from_date', models.DateField(blank=True, null=True)),
-                ('to_date', models.DateField(blank=True, null=True)),
-                ('step_data', models.JSONField(default=dict)),
-                ('current_step', models.PositiveIntegerField(default=1)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('premise', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='premises.premise')),
-                ('slot', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='premises.timeslot')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("session_id", models.CharField(max_length=100, unique=True)),
+                ("from_date", models.DateField(blank=True, null=True)),
+                ("to_date", models.DateField(blank=True, null=True)),
+                ("step_data", models.JSONField(default=dict)),
+                ("current_step", models.PositiveIntegerField(default=1)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "premise",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="premises.premise",
+                    ),
+                ),
+                (
+                    "slot",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="premises.timeslot",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'BookingMigrations',
+                "db_table": "BookingMigrations",
             },
         ),
         migrations.CreateModel(
-            name='Booking',
+            name="Booking",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('booking_id', models.CharField(db_index=True, max_length=20, unique=True)),
-                ('from_date', models.DateField(db_index=True)),
-                ('to_date', models.DateField()),
-                ('total_days', models.PositiveIntegerField()),
-                ('full_name', models.CharField(max_length=200)),
-                ('address', models.TextField()),
-                ('mobile', models.CharField(db_index=True, max_length=10)),
-                ('alt_mobile', models.CharField(blank=True, max_length=10)),
-                ('email', models.EmailField(max_length=254)),
-                ('function_name', models.CharField(max_length=200)),
-                ('function_type', models.CharField(choices=[('marriage', 'Marriage'), ('birthday', 'Birthday'), ('corporate', 'Corporate'), ('conference', 'Conference'), ('exhibition', 'Exhibition'), ('other', 'Other')], max_length=50)),
-                ('expected_guests', models.PositiveIntegerField()),
-                ('id_proof_type', models.CharField(choices=[('aadhaar', 'Aadhaar'), ('pan', 'PAN')], max_length=10)),
-                ('id_proof_number', models.CharField(max_length=20)),
-                ('id_proof_file', models.FileField(blank=True, null=True, upload_to='id_proofs/')),
-                ('bank_name', models.CharField(max_length=200)),
-                ('account_holder', models.CharField(max_length=200)),
-                ('account_number', models.CharField(max_length=50)),
-                ('ifsc_code', models.CharField(max_length=15)),
-                ('branch_name', models.CharField(max_length=200)),
-                ('micr_code', models.CharField(blank=True, max_length=9)),
-                ('base_rent', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('holiday_charges', models.DecimalField(decimal_places=2, default=0, max_digits=12)),
-                ('security_deposit', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('cgst', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('sgst', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('total_payable', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('payment_mode', models.CharField(choices=[('bank_transfer', 'Bank Transfer'), ('qr', 'QR Payment')], max_length=20)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('cancelled', 'Cancelled')], default='pending', max_length=20)),
-                ('admin_remarks', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('approved_at', models.DateTimeField(blank=True, null=True)),
-                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('premise', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='premises.premise')),
-                ('slot', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='premises.timeslot')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "booking_id",
+                    models.CharField(db_index=True, max_length=20, unique=True),
+                ),
+                ("from_date", models.DateField(db_index=True)),
+                ("to_date", models.DateField()),
+                ("total_days", models.PositiveIntegerField()),
+                ("full_name", models.CharField(max_length=200)),
+                ("address", models.TextField()),
+                ("mobile", models.CharField(db_index=True, max_length=10)),
+                ("alt_mobile", models.CharField(blank=True, max_length=10)),
+                ("email", models.EmailField(max_length=254)),
+                ("function_name", models.CharField(max_length=200)),
+                (
+                    "function_type",
+                    models.CharField(
+                        choices=[
+                            ("marriage", "Marriage"),
+                            ("birthday", "Birthday"),
+                            ("corporate", "Corporate"),
+                            ("conference", "Conference"),
+                            ("exhibition", "Exhibition"),
+                            ("other", "Other"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("expected_guests", models.PositiveIntegerField()),
+                (
+                    "id_proof_type",
+                    models.CharField(
+                        choices=[("aadhaar", "Aadhaar"), ("pan", "PAN")], max_length=10
+                    ),
+                ),
+                ("id_proof_number", models.CharField(max_length=20)),
+                (
+                    "id_proof_file",
+                    models.FileField(blank=True, null=True, upload_to="id_proofs/"),
+                ),
+                ("bank_name", models.CharField(max_length=200)),
+                ("account_holder", models.CharField(max_length=200)),
+                ("account_number", models.CharField(max_length=50)),
+                ("ifsc_code", models.CharField(max_length=15)),
+                ("branch_name", models.CharField(max_length=200)),
+                ("micr_code", models.CharField(blank=True, max_length=9)),
+                ("base_rent", models.DecimalField(decimal_places=2, max_digits=12)),
+                (
+                    "holiday_charges",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=12),
+                ),
+                (
+                    "security_deposit",
+                    models.DecimalField(decimal_places=2, max_digits=12),
+                ),
+                ("cgst", models.DecimalField(decimal_places=2, max_digits=12)),
+                ("sgst", models.DecimalField(decimal_places=2, max_digits=12)),
+                ("total_payable", models.DecimalField(decimal_places=2, max_digits=12)),
+                (
+                    "payment_mode",
+                    models.CharField(
+                        choices=[
+                            ("bank_transfer", "Bank Transfer"),
+                            ("qr", "QR Payment"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("approved", "Approved"),
+                            ("rejected", "Rejected"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("admin_remarks", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("approved_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "premise",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="premises.premise",
+                    ),
+                ),
+                (
+                    "slot",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="premises.timeslot",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'Bookings',
-                'indexes': [models.Index(fields=['from_date', 'to_date'], name='Bookings_from_da_95b8a0_idx'), models.Index(fields=['premise', 'from_date'], name='Bookings_premise_9c1794_idx')],
+                "db_table": "Bookings",
+                "indexes": [
+                    models.Index(
+                        fields=["from_date", "to_date"],
+                        name="Bookings_from_da_95b8a0_idx",
+                    ),
+                    models.Index(
+                        fields=["premise", "from_date"],
+                        name="Bookings_premise_9c1794_idx",
+                    ),
+                ],
             },
         ),
     ]
