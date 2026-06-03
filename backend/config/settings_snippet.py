@@ -30,3 +30,8 @@ CORS_ALLOWED_ORIGINS = [
 
 # Allow cookies/credentials if needed
 CORS_ALLOW_CREDENTIALS = True
+
+# Razorpay credentials
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
+RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='')
