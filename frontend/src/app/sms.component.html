@@ -1,0 +1,19 @@
+<div class="sms-form">
+  <h3>Send SMS</h3>
+
+  <div *ngIf="successMsg" class="success">{{ successMsg }}</div>
+  <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
+
+  <label>Mobile (without +91):</label>
+  <input [(ngModel)]="mobileNo" placeholder="e.g. 9876543210" />
+
+  <label>Message:</label>
+  <textarea [(ngModel)]="smsMsg" rows="4"></textarea>
+
+  <label>DLT TE ID (optional):</label>
+  <input [(ngModel)]="dltTeId" placeholder="DLT TE ID" />
+
+  <button (click)="sendSms()" [disabled]="loading">Send</button>
+
+  <div *ngIf="loading" class="spinner">Sending...</div>
+</div>

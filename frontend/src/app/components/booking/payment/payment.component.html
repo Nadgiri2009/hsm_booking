@@ -1,0 +1,14 @@
+<div class="payment-form">
+  <h3>Pay Now</h3>
+
+  <label>Amount (INR):</label>
+  <input type="number" [(ngModel)]="amount" min="1" />
+
+  <button (click)="pay()" [disabled]="loading">Pay Now</button>
+
+  <div *ngIf="loading">Processing...</div>
+
+  <div *ngIf="message" [ngClass]="{ 'success': message.includes('verified'), 'error': !message.includes('verified') }">
+    {{ message }}
+  </div>
+</div>
