@@ -19,9 +19,9 @@ def send_sms(sms_msg: str, mobile_no: str, dlt_te_id: str = None) -> dict:
     try:
         base_url = 'https://push3.aclgateway.com/servlet/com.aclwireless.pushconnectivity.listeners.TextListener'
         params = {
-            'appid': SMS_APPID,
-            'userId': SMS_APPID,
-            'pass': SMS_PASS,
+            'appid': 'MahaItsomc',
+            'userId': 'MahaItsomc',
+            'pass': 'mitsomc_10',
             'contenttype': '1',
             'from': SMS_SENDER,
             'to': f'91{mobile_no}',

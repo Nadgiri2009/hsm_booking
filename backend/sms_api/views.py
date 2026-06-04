@@ -10,6 +10,7 @@ import logging
 
 from .sms_service import send_sms
 from .payment_service import create_order, verify_payment
+from .models import Payment
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,18 @@ def create_payment_order(request):
         return JsonResponse({'error': res.get('error')}, status=500)
 
     order = res.get('order')
+    # persist payment order in DB
+    try:
+        Payment.objects.create(
+            order_id=order.get('id'),
+            amount=order.get('amount'),
+            currency=order.get('currency'),
+            receipt=receipt,
+            status=Payment.STATUS_CREATED,
+            raw_response=json.dumps(order),
+        )
+    except Exception:
+        logger.exception('Failed to create Payment record')
     return JsonResponse({
         'orderId': order.get('id'),
         'amount': order.get('amount'),
@@ -88,7 +101,16 @@ def verify_payment_view(request):
 
     ok = verify_payment(razorpay_order_id, razorpay_payment_id, razorpay_signature)
     if ok:
-        # TODO: update DB order status to PAID
+        # update DB order status to PAID
+        try:
+            p = Payment.objects.get(order_id=razorpay_order_id)
+            p.status = Payment.STATUS_PAID
+            p.razorpay_payment_id = razorpay_payment_id
+            p.razorpay_signature = razorpay_signature
+            p.save()
+        except Payment.DoesNotExist:
+            logger.warning('Payment record not found for order %s', razorpay_order_id)
+
         return JsonResponse({'success': True, 'message': 'Payment verified'})
     else:
         return JsonResponse({'success': False, 'error': 'Signature verification failed'}, status=400)
@@ -122,7 +144,19 @@ def razorpay_webhook(request):
     # handle payment.captured
     if event.get('event') == 'payment.captured':
         payload = event.get('payload', {})
-        # TODO: fulfill order in DB
-        logger.info('Payment captured webhook received')
+        payment_entity = payload.get('payment', {}).get('entity', {})
+        order_id = payment_entity.get('order_id')
+        payment_id = payment_entity.get('id')
+        # mark DB order as paid
+        if order_id:
+            try:
+                p = Payment.objects.get(order_id=order_id)
+                p.status = Payment.STATUS_PAID
+                p.razorpay_payment_id = payment_id
+                p.raw_response = json.dumps(payment_entity)
+                p.save()
+                logger.info('Payment %s marked as PAID for order %s', payment_id, order_id)
+            except Payment.DoesNotExist:
+                logger.warning('Webhook payment for unknown order %s', order_id)
 
     return HttpResponse('ok')

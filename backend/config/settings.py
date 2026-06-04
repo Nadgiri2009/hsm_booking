@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "apps.cancellations",
     "apps.complaints",
     "apps.notifications",
+    # Local SMS and Payments app
+    "sms_api",
 ]
 
 MIDDLEWARE = [
@@ -70,6 +72,8 @@ TEMPLATES = [
         },
     }
 ]
+# Serve Angular frontend
+TEMPLATES[0]['DIRS'] = [BASE_DIR / 'staticfiles' / 'frontend']
 
 WSGI_APPLICATION = "config.wsgi.application"
 
@@ -107,6 +111,11 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:4200", "http://127.0.0.1:4200"]
 CORS_ALLOW_CREDENTIALS = True
+_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors.split(",") if o.strip()] or [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+]
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
@@ -118,6 +127,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Razorpay credentials from environment (use python-decouple or env vars)
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
+RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='')
 
 # Static files storage for production
 if not DEBUG:
