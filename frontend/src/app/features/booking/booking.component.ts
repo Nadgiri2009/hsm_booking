@@ -299,9 +299,9 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
           <div class="success-icon">✅</div>
           <h2>Booking Submitted Successfully!</h2>
           <p>Your Booking ID: <strong>{{ bookingId }}</strong></p>
-          <p>You will receive a confirmation SMS and Email shortly.</p>
+          <p *ngIf="!paymentBooking">Admin approval is required before payment. You will receive the payment link after approval.</p>
+          <p *ngIf="paymentBooking">Payment completed successfully. You will receive the final booking details and receipt link by SMS.</p>
           <div class="success-actions">
-            <button class="btn-next" (click)="downloadReceipt()">📥 Download Receipt</button>
             <button class="btn-outline-btn" (click)="newBooking()">Make Another Booking</button>
           </div>
         </div>
@@ -426,17 +426,18 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
 })
 export class BookingComponent implements OnInit {
   currentStep = 1;
-  steps = ['Premise', 'Date & Slot', 'Summary', 'Applicant', 'Bank Details', 'Payment'];
+  steps = ['Premise', 'Date & Slot', 'Summary', 'Applicant', 'Bank Details', 'Approval'];
   premises: Premise[] = [];
   timeSlots: TimeSlot[] = [];
   bookedSlotIds: number[] = [];
   selectedPremise: Premise | null = null;
   selectedSlot: TimeSlot | null = null;
   bookingSummary: BookingSummary | null = null;
-  paymentMode: 'bank_transfer' | 'qr' = 'bank_transfer';
+  paymentMode: 'bank_transfer' | 'qr' | 'razorpay' = 'razorpay';
   isSubmitting = false;
   bookingId = '';
   bookingPk: number | null = null;
+  paymentBooking: any = null;
   today = new Date().toISOString().split('T')[0];
   idProofFile: File | null = null;
   availabilityMessage = '';
@@ -488,6 +489,11 @@ export class BookingComponent implements OnInit {
     this.dateSlotForm.valueChanges.subscribe(() => {
       this.refreshBookedSlotsForDateRange();
     });
+
+    const bookingId = new URLSearchParams(window.location.search).get('bookingId');
+    if (bookingId) {
+      this.startApprovedPayment(bookingId);
+    }
   }
 
   selectPremise(p: Premise): void {
@@ -586,8 +592,9 @@ export class BookingComponent implements OnInit {
 
     this.isSubmitting = true;
     this.submitError = '';
-    const formData = new FormData();
 
+    const formData = new FormData();
+    // ... all your existing formData.append() calls stay the same ...
     formData.append('premise', String(this.selectedPremise.id));
     formData.append('slot', String(this.selectedSlot.id));
     formData.append('from_date', this.dateSlotForm.value.from_date);
@@ -627,31 +634,103 @@ export class BookingComponent implements OnInit {
       next: (booking: any) => {
         const responseData = booking?.data ?? booking;
         this.bookingPk = responseData?.id ?? booking?.id ?? null;
-        this.bookingId = responseData?.booking_id ?? responseData?.bookingId ?? booking?.booking_id ?? booking?.bookingId ?? '';
+        this.bookingId = responseData?.temp_booking_id ?? responseData?.booking_id ?? responseData?.bookingId ?? booking?.booking_id ?? '';
         this.isSubmitting = false;
         this.submitError = '';
         this.currentStep = 7;
       },
       error: (err) => {
         this.isSubmitting = false;
-        const apiMessage = this.extractApiMessage(err);
-        this.submitError = apiMessage || 'Booking failed. Please try again.';
-        if ((apiMessage || '').toLowerCase().includes('no booking available')) {
-          this.currentStep = 2;
-          this.availabilityMessage = this.submitError;
-          this.refreshBookedSlotsForDateRange();
-        }
+        this.submitError = this.extractApiMessage(err) || 'Booking failed. Please try again.';
       }
     });
   }
 
-  downloadReceipt(): void {
-    const receiptId = this.bookingPk !== null ? String(this.bookingPk) : this.bookingId;
-    if (!receiptId) return;
-    this.bookingService.downloadReceipt(receiptId).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `Receipt_${this.bookingId}.pdf`; a.click();
+  openRazorpay(order: any): void {
+    const payer = this.paymentBooking || {};
+    const options: any = {
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency || 'INR',
+      name: 'Hutatma Smruti Mandir',
+      description: `Booking ID: ${this.bookingId}`,
+      order_id: order.orderId,
+      prefill: {
+        name: this.applicantForm.value.full_name || payer.full_name || '',
+        email: this.applicantForm.value.email || payer.email || '',
+        contact: this.applicantForm.value.mobile || payer.mobile || ''
+      },
+      theme: { color: '#0d7488' },
+      handler: (response: any) => {
+        this.verifyAndConfirm(response);
+      },
+      modal: {
+        ondismiss: () => {
+          this.submitError = 'Payment cancelled. Please try again.';
+        }
+      }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+  }
+
+  verifyAndConfirm(response: any): void {
+    this.isSubmitting = true;
+    const payload = {
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature,
+      booking_id: this.bookingId,
+      booking_pk: this.bookingPk
+    };
+
+    this.bookingService.verifyPayment(payload).subscribe({
+      next: (result: any) => {
+        this.bookingId = result?.finalBookingId || this.bookingId;
+        this.isSubmitting = false;
+        this.currentStep = 7; // show success screen
+      },
+      error: () => {
+        this.isSubmitting = false;
+        this.submitError = 'Payment verification failed. Contact support with Booking ID: ' + this.bookingId;
+      }
+    });
+  }
+
+  private startApprovedPayment(bookingId: string): void {
+    this.isSubmitting = true;
+    this.submitError = '';
+    this.bookingService.getBookingByIdOrMobile(bookingId).subscribe({
+      next: (bookings: any[]) => {
+        const booking = (bookings || []).find(row =>
+          row.booking_id === bookingId || row.temp_booking_id === bookingId || row.final_booking_id === bookingId
+        );
+        if (!booking || booking.status !== 'awaiting_payment') {
+          this.isSubmitting = false;
+          this.submitError = 'Booking is not approved for payment.';
+          return;
+        }
+
+        this.paymentBooking = booking;
+        this.bookingPk = booking.id ?? null;
+        this.bookingId = booking.booking_id;
+        const amountInPaise = Math.round(Number(booking.total_payable || 0) * 100);
+        this.bookingService.createPaymentOrder(amountInPaise, this.bookingId).subscribe({
+          next: (order: any) => {
+            this.isSubmitting = false;
+            this.openRazorpay(order);
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.submitError = this.extractApiMessage(err) || 'Failed to initiate payment. Please try again.';
+          }
+        });
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.submitError = this.extractApiMessage(err) || 'Booking not found.';
+      }
     });
   }
 
@@ -662,7 +741,8 @@ export class BookingComponent implements OnInit {
     this.bookingSummary = null;
     this.bookingId = '';
     this.bookingPk = null;
-    this.paymentMode = 'bank_transfer';
+    this.paymentBooking = null;
+    this.paymentMode = 'razorpay';
     this.idProofFile = null;
     this.bookedSlotIds = [];
     this.availabilityMessage = '';

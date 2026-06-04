@@ -51,6 +51,19 @@ export class BookingService {
     return this.api.postFormData<Booking>('bookings/', formData);
   }
 
+  // Payment related API calls
+  createPaymentOrder(amount: number, receipt: string): Observable<any> {
+    return this.api.post<any>('payment/create/', { amount, receipt });
+  }
+
+  verifyPayment(payload: any): Observable<any> {
+    return this.api.post<any>('payment/verify/', payload);
+  }
+
+  sendSms(mobile: string, message: string): Observable<any> {
+    return this.api.post<any>('send-sms/', { mobileNo: mobile, smsMsg: message });
+  }
+
   getBookingByIdOrMobile(query: string): Observable<Booking[]> {
     return this.api.get<Booking[]>('bookings/lookup/', { query });
   }

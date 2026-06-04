@@ -42,8 +42,8 @@ import { ApiService } from '../../../core/services/api.service';
               <td>{{ row.from_date }} → {{ row.to_date }}</td>
               <td><span class="status" [class]="row.status">{{ row.status }}</span></td>
               <td class="actions">
-                <button class="approve" (click)="approve(row)" [disabled]="row.status !== 'pending'">Approve</button>
-                <button class="reject" (click)="reject(row)" [disabled]="row.status !== 'pending'">Reject</button>
+                <button class="approve" (click)="approve(row)" [disabled]="!canReview(row)">Approve</button>
+                <button class="reject" (click)="reject(row)" [disabled]="!canReview(row)">Reject</button>
               </td>
             </tr>
           </tbody>
@@ -73,8 +73,8 @@ import { ApiService } from '../../../core/services/api.service';
     th, td { padding:.65rem; border-bottom:1px solid #eef0fb; text-align:left; }
     th { background:#f7f8ff; color:#2e3760; }
     .status { text-transform:capitalize; font-weight:700; font-size:.78rem; }
-    .status.pending { color:#e65100; }
-    .status.approved { color:#2e7d32; }
+    .status.pending, .status.pending_approval, .status.awaiting_payment { color:#e65100; }
+    .status.approved, .status.confirmed { color:#2e7d32; }
     .status.rejected, .status.cancelled { color:#c62828; }
     .actions { display:flex; gap:.45rem; }
     .actions button { border:none; border-radius:6px; padding:.35rem .65rem; cursor:pointer; font-size:.78rem; }
@@ -175,10 +175,16 @@ export class BookingsComponent {
   }
 
   reject(row: any): void {
-    this.api.post(`bookings/${row.id}/reject/`, { remarks: 'Rejected by admin' }).subscribe({
+    const reason = window.prompt('Enter rejection reason');
+    if (!reason) return;
+    this.api.post(`bookings/${row.id}/reject/`, { reason }).subscribe({
       next: () => this.load(),
       error: () => this.load()
     });
+  }
+
+  canReview(row: any): boolean {
+    return row.status === 'pending_approval' || row.status === 'pending';
   }
 
   private extractRows(source: any): any[] {

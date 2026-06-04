@@ -71,8 +71,11 @@ export interface Booking {
   slot?: TimeSlot;
   applicant?: ApplicantDetails;
   bank_details?: BankDetails;
-  payment_mode: 'bank_transfer' | 'qr';
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  payment_mode: 'bank_transfer' | 'qr' | 'razorpay';
+  status: 'draft' | 'pending_approval' | 'awaiting_payment' | 'confirmed' | 'rejected' | 'cancelled' | 'pending' | 'approved';
+  payment_status?: 'pending' | 'paid' | 'failed' | 'refunded';
+  temp_booking_id?: string;
+  final_booking_id?: string;
   summary?: BookingSummary;
   created_at?: string;
 }

@@ -57,3 +57,5 @@ export class BookingService {
     return this.http.get(`${this.apiUrl}/admin/${bookingId}/duplicate-receipt/`, { responseType: 'blob' });
   }
 }
+
+
