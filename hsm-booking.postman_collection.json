@@ -47,7 +47,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@solapurcorp.gov.in\",\n  \"password\": \"Admin@12345\"\n}"
             },
-            "url": "{{baseUrl}}/api/auth/login/"
+            "url": "/api/auth/login/"
           }
         },
         {
