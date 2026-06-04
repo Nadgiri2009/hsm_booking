@@ -1,3 +1,7 @@
+from datetime import timedelta
+
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.premises.serializers import PremiseSerializer, TimeSlotSerializer
@@ -19,10 +23,15 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = [
             "booking_id",
+            "temp_booking_id",
+            "final_booking_id",
             "status",
+            "payment_status",
             "created_at",
             "approved_at",
             "approved_by",
+            "rejected_at",
+            "slot_locked_until",
         ]
 
     def validate(self, attrs):
@@ -40,9 +49,22 @@ class BookingSerializer(serializers.ModelSerializer):
             conflicts = Booking.objects.filter(
                 premise=premise,
                 slot=slot,
-                status__in=["pending", "approved"],
                 from_date__lte=to_date,
                 to_date__gte=from_date,
+            ).filter(
+                Q(
+                    status__in=[
+                        "pending_approval",
+                        "awaiting_payment",
+                        "confirmed",
+                        "pending",
+                        "approved",
+                    ]
+                )
+                | Q(
+                    status="rejected",
+                    rejected_at__gt=timezone.now() - timedelta(minutes=10),
+                )
             )
             if self.instance:
                 conflicts = conflicts.exclude(pk=self.instance.pk)
@@ -63,6 +85,8 @@ class BookingListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "booking_id",
+            "temp_booking_id",
+            "final_booking_id",
             "full_name",
             "mobile",
             "email",
@@ -72,6 +96,7 @@ class BookingListSerializer(serializers.ModelSerializer):
             "to_date",
             "total_payable",
             "status",
+            "payment_status",
             "created_at",
         ]
 

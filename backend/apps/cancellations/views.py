@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.bookings.models import Booking
+from apps.bookings.views import audit_booking
 
 from .models import Cancellation
 from .serializers import CancellationSerializer
@@ -18,6 +19,7 @@ def calculate_refund_percentage(event_date):
     if days_left >= 60:
         return 90
     elif days_left >= 30:
+    
         return 80
     elif days_left >= 7:
         return 50
@@ -32,9 +34,13 @@ class CancellationRequestView(APIView):
         booking_id = request.data.get("booking_id")
         reason = request.data.get("reason", "")
         try:
-            booking = Booking.objects.get(booking_id=booking_id, status="approved")
+            booking = Booking.objects.get(
+                booking_id=booking_id,
+                status="confirmed",
+                payment_status="paid",
+            )
         except Booking.DoesNotExist:
-            return Response({"error": "Valid approved booking not found"}, status=404)
+            return Response({"error": "Valid confirmed booking not found"}, status=404)
 
         if hasattr(booking, "cancellation"):
             return Response({"error": "Cancellation already requested"}, status=400)
@@ -53,7 +59,16 @@ class CancellationRequestView(APIView):
             otp=otp,
             otp_expiry=timezone.now() + timedelta(minutes=10),
         )
-        # TODO: Send OTP via SMS/Email
+        # Send OTP via SMS
+        try:
+            from sms_api.sms_service import send_sms
+            otp_msg = (
+                f"Your OTP for cancellation of Booking ID {booking_id} is {otp}. "
+                f"Valid for 10 minutes. -SMC Solapur"
+            )
+            send_sms(otp_msg, str(booking.mobile))
+        except Exception:
+            pass  # log but don't block cancellation
         return Response(
             {
                 "message": "OTP sent to registered mobile/email",
@@ -77,8 +92,17 @@ class OTPVerifyView(APIView):
             if cancellation.otp == otp and cancellation.otp_expiry > timezone.now():
                 cancellation.otp_verified = True
                 cancellation.status = "otp_verified"
+                old_status = cancellation.booking.status
+                old_payment_status = cancellation.booking.payment_status
                 cancellation.booking.status = "cancelled"
                 cancellation.booking.save()
+                audit_booking(
+                    cancellation.booking,
+                    "cancelled_by_otp",
+                    old_status,
+                    old_payment_status,
+                    cancellation.reason,
+                )
                 cancellation.save()
                 return Response(
                     {
@@ -109,7 +133,17 @@ class CancellationViewSet(viewsets.ReadOnlyModelViewSet):
         cancellation = self.get_object()
         cancellation.status = "rejected"
         cancellation.admin_remarks = request.data.get("remarks", "")
-        cancellation.booking.status = "approved"
+        old_status = cancellation.booking.status
+        old_payment_status = cancellation.booking.payment_status
+        cancellation.booking.status = "confirmed"
         cancellation.booking.save()
+        audit_booking(
+            cancellation.booking,
+            "cancellation_rejected",
+            old_status,
+            old_payment_status,
+            cancellation.admin_remarks,
+            request.user,
+        )
         cancellation.save()
         return Response({"message": "Cancellation rejected"})

@@ -12,14 +12,41 @@ def generate_booking_id():
     return f"HSM{datetime.now().strftime('%Y%m%d')}{str(uuid.uuid4())[:4].upper()}"
 
 
+def generate_temp_booking_id():
+    from datetime import datetime
+
+    return f"TEMP{datetime.now().strftime('%Y%m%d')}{str(uuid.uuid4())[:6].upper()}"
+
+
+def generate_final_booking_id():
+    from datetime import datetime
+
+    return f"HSM{datetime.now().strftime('%Y%m%d')}{str(uuid.uuid4())[:6].upper()}"
+
+
 class Booking(models.Model):
     STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("approved", "Approved"),
+        ("draft", "Draft"),
+        ("pending_approval", "Pending Approval"),
+        ("awaiting_payment", "Awaiting Payment"),
+        ("confirmed", "Confirmed"),
         ("rejected", "Rejected"),
         ("cancelled", "Cancelled"),
+        # Legacy values retained so existing rows remain readable.
+        ("pending", "Pending"),
+        ("approved", "Approved"),
     ]
-    PAYMENT_MODE = [("bank_transfer", "Bank Transfer"), ("qr", "QR Payment")]
+    PAYMENT_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("paid", "Paid"),
+        ("failed", "Failed"),
+        ("refunded", "Refunded"),
+    ]
+    PAYMENT_MODE = [
+        ("bank_transfer", "Bank Transfer"),
+        ("qr", "QR Payment"),
+        ("razorpay", "Razorpay"),
+    ]
     ID_PROOF_CHOICES = [("aadhaar", "Aadhaar"), ("pan", "PAN")]
     FUNCTION_TYPES = [
         ("marriage", "Marriage"),
@@ -30,7 +57,13 @@ class Booking(models.Model):
         ("other", "Other"),
     ]
 
-    booking_id = models.CharField(max_length=20, unique=True, db_index=True)
+    booking_id = models.CharField(max_length=24, unique=True, db_index=True)
+    temp_booking_id = models.CharField(
+        max_length=24, unique=True, db_index=True, blank=True
+    )
+    final_booking_id = models.CharField(
+        max_length=24, db_index=True, null=True, blank=True
+    )
     premise = models.ForeignKey(Premise, on_delete=models.PROTECT)
     slot = models.ForeignKey(TimeSlot, on_delete=models.PROTECT)
     from_date = models.DateField(db_index=True)
@@ -67,12 +100,20 @@ class Booking(models.Model):
     total_payable = models.DecimalField(max_digits=12, decimal_places=2)
 
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    status = models.CharField(
+        max_length=24, choices=STATUS_CHOICES, default="pending_approval"
+    )
+    payment_status = models.CharField(
+        max_length=20, choices=PAYMENT_STATUS_CHOICES, default="pending"
+    )
     admin_remarks = models.TextField(blank=True)
+    rejection_reason = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    slot_locked_until = models.DateTimeField(null=True, blank=True)
     approved_by = models.ForeignKey(
         "accounts.AdminUser", null=True, blank=True, on_delete=models.SET_NULL
     )
@@ -85,12 +126,41 @@ class Booking(models.Model):
         ]
 
     def save(self, *args, **kwargs):
+        if not self.temp_booking_id:
+            self.temp_booking_id = generate_temp_booking_id()
         if not self.booking_id:
-            self.booking_id = generate_booking_id()
+            self.booking_id = self.temp_booking_id
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.booking_id} - {self.full_name}"
+
+    @property
+    def display_booking_id(self):
+        return self.final_booking_id or self.temp_booking_id or self.booking_id
+
+
+class BookingAuditLog(models.Model):
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, related_name="audit_logs"
+    )
+    from_status = models.CharField(max_length=24, blank=True)
+    to_status = models.CharField(max_length=24)
+    from_payment_status = models.CharField(max_length=20, blank=True)
+    to_payment_status = models.CharField(max_length=20, blank=True)
+    action = models.CharField(max_length=50)
+    remarks = models.TextField(blank=True)
+    changed_by = models.ForeignKey(
+        "accounts.AdminUser", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "BookingAuditLogs"
+        indexes = [
+            models.Index(fields=["booking", "created_at"]),
+            models.Index(fields=["action", "created_at"]),
+        ]
 
 
 class BookingMigration(models.Model):
