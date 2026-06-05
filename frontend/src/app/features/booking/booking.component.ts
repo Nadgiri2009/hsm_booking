@@ -716,6 +716,8 @@ export class BookingComponent implements OnInit {
         this.bookingPk = booking.id ?? null;
         this.bookingId = booking.booking_id;
         const amountInPaise = Math.round(Number(booking.total_payable || 0) * 100);
+        console.log('total_payable (booking):', booking.total_payable);
+        console.log('amountInPaise:', amountInPaise);
         this.bookingService.createPaymentOrder(amountInPaise, this.bookingId).subscribe({
           next: (order: any) => {
             this.isSubmitting = false;

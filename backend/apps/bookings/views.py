@@ -245,7 +245,8 @@ class BookingViewSet(viewsets.ModelViewSet):
             request.user,
         )
 
-        payment_link = request.build_absolute_uri(f"/booking?bookingId={booking.booking_id}")
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+        payment_link = f"{frontend_url}/booking?bookingId={booking.booking_id}"
         send_booking_message(
             booking,
             (

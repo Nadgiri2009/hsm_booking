@@ -22,7 +22,7 @@ def create_order(amount: int, currency: str = 'INR', receipt: str = None) -> dic
     try:
         client = _get_client()
         data = {
-            'amount': amount,
+            'amount': max(int(amount), 100),  # minimum 100 paise = ₹1
             'currency': currency,
             'receipt': receipt or 'receipt_1',
             'payment_capture': 1,  # auto capture

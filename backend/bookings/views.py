@@ -224,7 +224,21 @@ class AdminBookingApproveView(APIView):
             booking.approved_at = timezone.now()
             booking.save()
 
-            # TODO: Send SMS/email notification
+            # Send SMS with payment link
+            try:
+                from sms_api.sms_service import send_sms
+                from django.conf import settings
+                payment_link = f"http://localhost:4200/booking?bookingId={booking.booking_id}"
+                sms_msg = (
+                    f"Dear {booking.applicant_name}, your booking {booking.booking_id} "
+                    f"at Hutatma Smruti Mandir is approved. "
+                    f"Please complete payment: {payment_link} -SMC Solapur"
+                )
+                result = send_sms(sms_msg, str(booking.mobile))
+                logger.info(f"SMS result for {booking_id}: {result}")
+            except Exception as e:
+                logger.error(f"SMS failed for {booking_id}: {e}")
+
             logger.info(f"Booking {booking_id} approved by {request.user.email}")
             return Response({"success": True, "message": "Booking approved."})
         except Booking.DoesNotExist:

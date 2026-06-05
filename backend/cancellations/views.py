@@ -32,7 +32,7 @@ class CancellationRequestView(APIView):
         otp = request.data.get("otp")
 
         try:
-            booking = Booking.objects.get(booking_id=booking_id, status__in=["approved", "confirmed"])
+            booking = Booking.objects.get(booking_id=booking_id, status__in=["approved", "confirmed", "awaiting_payment"])
         except Booking.DoesNotExist:
             return Response(
                 {"message": "Booking not found or not eligible for cancellation."},
@@ -55,6 +55,7 @@ class CancellationRequestView(APIView):
             )
 
             # TODO: Send OTP via SMS to booking.mobile
+            
             logger.info(f"Cancellation OTP sent for {booking_id}: {otp_code}")
             return Response(
                 {"success": True, "message": "OTP sent to registered mobile number."}

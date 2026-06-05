@@ -12,6 +12,7 @@
     "baseUrl": ".",
     "incremental": true,
     "skipLibCheck": true
+    ,"types": ["node"]
   },
   "exclude": ["node_modules", "dist"]
 }
