@@ -20,6 +20,11 @@ from .serializers import (
     BookingSerializer,
     CalculationSerializer,
 )
+import csv
+from django.http import HttpResponse
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncMonth
+from .models import AuditLog
 
 ACTIVE_SLOT_STATUSES = [
     "pending_approval",
@@ -95,6 +100,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             "retrieve",
             "calculate",
             "availability",
+            "availability_range",
             "lookup",
             "receipt",
         ]:
@@ -152,6 +158,93 @@ class BookingViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=False, methods=["get"], permission_classes=[permissions.AllowAny])
+    def availability_range(self, request):
+        """Return session-wise availability for each date in the range.
+
+        Query params: premise_id, from_date, to_date, optional slot_id
+        """
+        premise_id = request.query_params.get("premise_id")
+        from_date = request.query_params.get("from_date")
+        to_date = request.query_params.get("to_date")
+        slot_id = request.query_params.get("slot_id")
+        if not premise_id or not from_date or not to_date:
+            return Response({"error": "premise_id, from_date and to_date required"}, status=400)
+
+        try:
+            premise = Premise.objects.get(id=premise_id)
+        except Premise.DoesNotExist:
+            return Response({"error": "Premise not found"}, status=404)
+
+        # load active slots for premise
+        slots = list(TimeSlot.objects.filter(premise=premise, is_active=True).order_by('id'))
+
+        # fetch bookings overlapping range
+        bookings = Booking.objects.filter(
+            premise=premise,
+            from_date__lte=to_date,
+            to_date__gte=from_date,
+        ).filter(
+            Q(status__in=ACTIVE_SLOT_STATUSES)
+            | Q(status="rejected", rejected_at__gt=timezone.now() - timedelta(minutes=10))
+        ).select_related('slot')
+
+        # build per-date map
+        start = from_date
+        from datetime import datetime, timedelta as _td
+
+        try:
+            start_dt = datetime.strptime(from_date, "%Y-%m-%d").date()
+            end_dt = datetime.strptime(to_date, "%Y-%m-%d").date()
+        except Exception:
+            return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+
+        delta = (end_dt - start_dt).days
+        result = {}
+        for i in range(delta + 1):
+            d = start_dt + _td(days=i)
+            date_str = d.isoformat()
+            # bookings for this date
+            day_bookings = [b for b in bookings if b.from_date <= d <= b.to_date]
+            booked_slot_ids = set(b.slot_id for b in day_bookings)
+            slots_status = {}
+            for s in slots:
+                slots_status[str(s.id)] = "booked" if s.id in booked_slot_ids else "available"
+
+            # detect full day booking heuristically by slot name containing 'full'
+            full_booked = False
+            for b in day_bookings:
+                if "full" in (b.slot.name or "").lower():
+                    full_booked = True
+                    break
+
+            conflicts = []
+            if full_booked:
+                conflicts.append("Full Day booking already exists for the selected date.")
+
+            # determine summary status
+            if all(v == "booked" for v in slots_status.values()):
+                summary = "unavailable"
+            elif any(v == "booked" for v in slots_status.values()):
+                summary = "partial"
+            else:
+                summary = "available"
+
+            result[date_str] = {
+                "slots": slots_status,
+                "conflicts": conflicts,
+                "summary": summary,
+            }
+
+        # If slot_id provided, compute conflicting dates for that slot specifically
+        conflicting_dates = []
+        if slot_id:
+            for date_str, data in result.items():
+                if str(slot_id) in data["slots"] and data["slots"][str(slot_id)] == "booked":
+                    conflicting_dates.append(date_str)
+
+        return Response({"premise_id": premise.id, "dates": result, "conflicting_dates": conflicting_dates})
+
     @action(detail=False, methods=["post"], permission_classes=[permissions.AllowAny])
     def calculate(self, request):
         ser = CalculationSerializer(data=request.data)
@@ -193,7 +286,11 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 "premise": {"id": premise.id, "name": premise.name},
+                "dates": [
+                    (from_date + timedelta(days=i)).isoformat() for i in range(days)
+                ],
                 "total_days": days,
+                "slot": {"id": slot.id, "name": slot.name},
                 "base_rent": round(base, 2),
                 "holiday_charges": round(holiday_charges, 2),
                 "security_deposit": round(deposit, 2),
@@ -335,6 +432,125 @@ class BookingViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = (
             f'attachment; filename="Receipt_{booking.booking_id}.pdf"'
         )
+        return response
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def audit_logs(self, request):
+        """Return audit logs with optional filters: from_date, to_date, username, action"""
+        qs = AuditLog.objects.all().order_by('-created_at')
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        username = request.query_params.get('username')
+        action = request.query_params.get('action')
+        if from_date:
+            qs = qs.filter(created_at__date__gte=from_date)
+        if to_date:
+            qs = qs.filter(created_at__date__lte=to_date)
+        if username:
+            qs = qs.filter(username__icontains=username)
+        if action:
+            qs = qs.filter(action__icontains=action)
+
+        data = [
+            {
+                'id': a.id,
+                'username': a.username,
+                'role': a.role,
+                'action': a.action,
+                'entity': a.entity,
+                'entity_id': a.entity_id,
+                'ip_address': a.ip_address,
+                'remarks': a.remarks,
+                'created_at': a.created_at,
+            }
+            for a in qs[:1000]
+        ]
+        return Response(data)
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def reports(self, request):
+        """Return aggregated booking statistics and top items."""
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        premise_id = request.query_params.get('premise_id')
+
+        qs = Booking.objects.all()
+        if from_date:
+            qs = qs.filter(created_at__date__gte=from_date)
+        if to_date:
+            qs = qs.filter(created_at__date__lte=to_date)
+        if premise_id:
+            qs = qs.filter(premise_id=premise_id)
+
+        total_bookings = qs.count()
+        successful_payments = qs.filter(payment_status='paid').count()
+        pending_payments = qs.filter(payment_status='pending').count()
+        failed_payments = qs.filter(payment_status='failed').count()
+        revenue_collected = qs.filter(payment_status='paid').aggregate(total=Sum('total_payable'))['total'] or 0
+
+        # Most booked premise
+        top_premise = (
+            qs.values('premise__name')
+            .annotate(cnt=Count('id'))
+            .order_by('-cnt')
+            .first()
+        )
+
+        # Bookings by month
+        monthly = (
+            qs.annotate(month=TruncMonth('created_at'))
+            .values('month')
+            .annotate(count=Count('id'))
+            .order_by('month')
+        )
+
+        return Response(
+            {
+                'total_bookings': total_bookings,
+                'successful_payments': successful_payments,
+                'pending_payments': pending_payments,
+                'failed_payments': failed_payments,
+                'revenue_collected': float(revenue_collected),
+                'most_booked_premise': top_premise,
+                'monthly': list(monthly),
+            }
+        )
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
+    def export(self, request):
+        """Export bookings CSV filtered by query params."""
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        premise_id = request.query_params.get('premise_id')
+        payment_status = request.query_params.get('payment_status')
+
+        qs = Booking.objects.select_related('premise', 'slot').all().order_by('-created_at')
+        if from_date:
+            qs = qs.filter(created_at__date__gte=from_date)
+        if to_date:
+            qs = qs.filter(created_at__date__lte=to_date)
+        if premise_id:
+            qs = qs.filter(premise_id=premise_id)
+        if payment_status:
+            qs = qs.filter(payment_status=payment_status)
+
+        # CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="bookings_export.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['Booking ID','Applicant Name','Premise','Booking From','Booking To','Session','Amount','Payment Status','Created At'])
+        for b in qs:
+            writer.writerow([
+                b.booking_id,
+                b.full_name,
+                b.premise.name if b.premise else '',
+                b.from_date,
+                b.to_date,
+                b.slot.name if b.slot else '',
+                float(b.total_payable),
+                b.payment_status,
+                b.created_at,
+            ])
         return response
 
 

@@ -118,3 +118,22 @@ class CalculationSerializer(serializers.Serializer):
                 {"to_date": "To date must be on or after from date."}
             )
         return attrs
+
+
+class AuditLogSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField()
+    role = serializers.CharField()
+    action = serializers.CharField()
+    entity = serializers.CharField()
+    entity_id = serializers.CharField()
+    ip_address = serializers.CharField()
+    remarks = serializers.CharField()
+    created_at = serializers.DateTimeField()
+
+
+class ReportFilterSerializer(serializers.Serializer):
+    from_date = serializers.DateField(required=False)
+    to_date = serializers.DateField(required=False)
+    premise_id = serializers.IntegerField(required=False)
+    payment_status = serializers.CharField(required=False)

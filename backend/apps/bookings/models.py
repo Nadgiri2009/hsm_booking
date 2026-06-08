@@ -180,3 +180,26 @@ class BookingMigration(models.Model):
 
     class Meta:
         db_table = "BookingMigrations"
+
+
+class AuditLog(models.Model):
+    """General-purpose audit log for booking and admin actions."""
+
+    user = models.ForeignKey(
+        "accounts.AdminUser", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    username = models.CharField(max_length=200, blank=True)
+    role = models.CharField(max_length=100, blank=True)
+    action = models.CharField(max_length=200)
+    entity = models.CharField(max_length=200, blank=True)
+    entity_id = models.CharField(max_length=100, blank=True)
+    ip_address = models.CharField(max_length=45, blank=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "AuditLogs"
+        indexes = [models.Index(fields=["action", "created_at"]), models.Index(fields=["username"])]
+
+    def __str__(self):
+        return f"{self.created_at} - {self.action} - {self.username or 'system'}"

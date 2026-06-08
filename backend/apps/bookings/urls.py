@@ -23,6 +23,26 @@ urlpatterns = [
         name="booking-calculate",
     ),
     re_path(
+        r"^availability-range/?$",
+        BookingViewSet.as_view({"get": "availability_range"}),
+        name="booking-availability-range",
+    ),
+    re_path(
+        r"^audit-logs/?$",
+        BookingViewSet.as_view({"get": "audit_logs"}),
+        name="booking-audit-logs",
+    ),
+    re_path(
+        r"^reports/?$",
+        BookingViewSet.as_view({"get": "reports"}),
+        name="booking-reports",
+    ),
+    re_path(
+        r"^export/?$",
+        BookingViewSet.as_view({"get": "export"}),
+        name="booking-export",
+    ),
+    re_path(
         r"^lookup/?$", BookingViewSet.as_view({"get": "lookup"}), name="booking-lookup"
     ),
     re_path(
