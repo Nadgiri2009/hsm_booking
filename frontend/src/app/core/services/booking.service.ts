@@ -43,6 +43,12 @@ export class BookingService {
     return this.api.get<BookingAvailability>('bookings/availability/', { premise_id: premiseId, date });
   }
 
+  checkAvailabilityRange(premiseId: number, fromDate: string, toDate: string, slotId?: number): Observable<any> {
+    const params: any = { premise_id: premiseId, from_date: fromDate, to_date: toDate };
+    if (slotId) params.slot_id = slotId;
+    return this.api.get<any>('bookings/availability-range/', params);
+  }
+
   calculateSummary(data: any): Observable<BookingSummary> {
     return this.api.post<BookingSummary>('bookings/calculate/', data);
   }

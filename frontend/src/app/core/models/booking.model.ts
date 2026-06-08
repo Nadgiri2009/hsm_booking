@@ -29,7 +29,7 @@ export interface BookingAvailability {
 export interface BookingSummary {
   premise: Premise;
   dates: string[];
-  slot: TimeSlot[];
+  slot: TimeSlot;
   total_days: number;
   base_rent: number;
   holiday_charges: number;

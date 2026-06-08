@@ -7,7 +7,6 @@ import { LanguageService } from '../../core/services/language.service';
 import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.model';
 
 @Component({
-  selector: 'app-booking',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
@@ -28,7 +27,7 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
       </div>
 
       <div class="booking-body">
-        <!-- Step 1: Select Premise -->
+        <!-- Merged Step 1: Booking Details (Premise + Date & Slot) -->
         <div class="step-content" *ngIf="currentStep === 1">
           <h2>{{ lang.get('booking.selectPremise') }}</h2>
           <div class="premise-cards">
@@ -42,14 +41,8 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
               <p class="deposit">Security Deposit: ₹{{ p.security_deposit | number }}</p>
             </div>
           </div>
-          <button class="btn-next" [disabled]="!selectedPremise" (click)="nextStep()">
-            {{ lang.get('booking.proceed') }} →
-          </button>
-        </div>
 
-        <!-- Step 2: Date & Slot -->
-        <div class="step-content" *ngIf="currentStep === 2">
-          <h2>{{ lang.get('booking.selectDate') }} & {{ lang.get('booking.selectSlot') }}</h2>
+          <h2 style="margin-top:1.75rem">{{ lang.get('booking.selectDate') }} & {{ lang.get('booking.selectSlot') }}</h2>
           <form [formGroup]="dateSlotForm">
             <div class="form-row">
               <div class="form-group">
@@ -79,16 +72,16 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
               {{ availabilityMessage }}
             </div>
           </form>
-          <div class="step-nav">
-            <button class="btn-back" (click)="prevStep()">← {{ lang.get('booking.back') }}</button>
-            <button class="btn-next" [disabled]="!dateSlotForm.valid || !selectedSlot || isSelectedSlotUnavailable()" (click)="loadSummary()">
-              {{ lang.get('booking.proceed') }} →
+
+          <div class="step-nav" style="margin-top:1.5rem;">
+            <button class="btn-next" [disabled]="!selectedPremise || !dateSlotForm.valid || !selectedSlot || isSelectedSlotUnavailable()" (click)="loadSummary()">
+              Proceed →
             </button>
           </div>
         </div>
 
-        <!-- Step 3: Booking Summary -->
-        <div class="step-content" *ngIf="currentStep === 3">
+        <!-- Step 2: Booking Summary -->
+        <div class="step-content" *ngIf="currentStep === 2">
           <h2>{{ lang.get('booking.summary') }}</h2>
           <div class="summary-table" *ngIf="bookingSummary">
             <div class="summary-row">
@@ -126,8 +119,8 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
           </div>
         </div>
 
-        <!-- Step 4: Applicant Details -->
-        <div class="step-content" *ngIf="currentStep === 4">
+        <!-- Step 3: Applicant Details -->
+        <div class="step-content" *ngIf="currentStep === 3">
           <h2>{{ lang.get('booking.applicantDetails') }}</h2>
           <form [formGroup]="applicantForm">
             <div class="form-row">
@@ -204,8 +197,8 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
           </div>
         </div>
 
-        <!-- Step 5: Bank Details -->
-        <div class="step-content" *ngIf="currentStep === 5">
+        <!-- Step 4: Bank Details -->
+        <div class="step-content" *ngIf="currentStep === 4">
           <h2>{{ lang.get('booking.bankDetails') }}</h2>
           <form [formGroup]="bankForm">
             <div class="form-row">
@@ -257,8 +250,8 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
           </div>
         </div>
 
-        <!-- Step 6: Payment -->
-        <div class="step-content" *ngIf="currentStep === 6">
+        <!-- Step 5: Payment -->
+        <div class="step-content" *ngIf="currentStep === 5">
           <h2>{{ lang.get('booking.payment') }}</h2>
           <div class="payment-options">
             <div class="payment-card" [class.selected]="paymentMode === 'bank_transfer'" (click)="paymentMode = 'bank_transfer'">
@@ -295,7 +288,7 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
         </div>
 
         <!-- Success -->
-        <div class="step-content success-screen" *ngIf="currentStep === 7">
+        <div class="step-content success-screen" *ngIf="currentStep === 6">
           <div class="success-icon">✅</div>
           <h2>Booking Submitted Successfully!</h2>
           <p>Your Booking ID: <strong>{{ bookingId }}</strong></p>
@@ -426,7 +419,7 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
 })
 export class BookingComponent implements OnInit {
   currentStep = 1;
-  steps = ['Premise', 'Date & Slot', 'Summary', 'Applicant', 'Bank Details', 'Approval'];
+  steps = ['Booking Details', 'Summary', 'Applicant Details', 'Bank Details', 'Approval'];
   premises: Premise[] = [];
   timeSlots: TimeSlot[] = [];
   bookedSlotIds: number[] = [];
@@ -442,6 +435,9 @@ export class BookingComponent implements OnInit {
   idProofFile: File | null = null;
   availabilityMessage = '';
   submitError = '';
+  availabilityMap: any = {};
+  conflictingDates: string[] = [];
+  isAvailabilityConflict = false;
 
   dateSlotForm: FormGroup;
   applicantForm: FormGroup;
@@ -503,148 +499,156 @@ export class BookingComponent implements OnInit {
     this.bookingSummary = null;
     this.availabilityMessage = '';
     this.submitError = '';
+
     this.bookingService.getTimeSlots(p.id).subscribe({
-      next: (slots) => {
-        this.timeSlots = slots;
-        this.refreshBookedSlotsForDateRange();
-      },
+      next: (slots) => { this.timeSlots = slots; },
       error: () => { this.timeSlots = []; }
     });
-  }
 
-  selectSlot(slot: TimeSlot): void {
-    if (this.isSlotBooked(slot.id)) {
-      this.availabilityMessage = this.getNoAvailabilityMessage();
-      return;
-    }
-    this.selectedSlot = slot;
-    this.availabilityMessage = '';
+    // refresh availability for currently selected date range
+    this.refreshBookedSlotsForDateRange();
   }
 
   isSlotBooked(slotId: number): boolean {
     return this.bookedSlotIds.includes(slotId);
   }
 
-  isSelectedSlotUnavailable(): boolean {
-    return !!this.selectedSlot && this.isSlotBooked(this.selectedSlot.id);
+  selectSlot(slot: TimeSlot): void {
+    if (this.isSlotBooked(slot.id)) return;
+    this.selectedSlot = slot;
+    this.bookingSummary = null;
+    this.submitError = '';
+    // re-check availability for chosen slot across date range
+    this.refreshBookedSlotsForDateRange();
   }
 
   loadSummary(): void {
-    if (!this.selectedPremise || !this.selectedSlot) return;
-
-    if (this.isSelectedSlotUnavailable()) {
-      this.availabilityMessage = this.getNoAvailabilityMessage();
+    if (!this.selectedPremise || !this.selectedSlot || !this.dateSlotForm.valid) {
+      this.submitError = 'Please select premise, dates and a slot before proceeding.';
       return;
     }
+    // First check availability across the selected date range for the selected slot
+    const fromDate = this.dateSlotForm.value.from_date;
+    const toDate = this.dateSlotForm.value.to_date;
+    this.isSubmitting = true;
+    this.bookingService.checkAvailabilityRange(this.selectedPremise!.id, fromDate, toDate, this.selectedSlot!.id).subscribe({
+      next: (res) => {
+        this.isSubmitting = false;
+        this.availabilityMap = res?.dates || {};
+        this.conflictingDates = res?.conflicting_dates || [];
+        this.isAvailabilityConflict = (this.conflictingDates && this.conflictingDates.length > 0) || Object.values(this.availabilityMap).some((v: any) => v.summary !== 'available');
+        if (this.isAvailabilityConflict) {
+          this.submitError = this.conflictingDates && this.conflictingDates.length ? ('The following dates are unavailable: ' + this.conflictingDates.join(', ')) : 'Selected slot is not fully available for the chosen range.';
+          return;
+        }
 
-    const payload = {
-      premise_id: this.selectedPremise.id,
-      slot_id: this.selectedSlot.id,
-      from_date: this.dateSlotForm.value.from_date,
-      to_date: this.dateSlotForm.value.to_date
-    };
-    this.bookingService.calculateSummary(payload).subscribe({
-      next: (calc: any) => {
-        const calculation = calc?.data ?? calc;
-        this.bookingSummary = {
-          premise: this.selectedPremise as Premise,
-          dates: [this.dateSlotForm.value.from_date, this.dateSlotForm.value.to_date],
-          slot: [this.selectedSlot as TimeSlot],
-          total_days: Number(calculation?.total_days ?? 0),
-          base_rent: Number(calculation?.base_rent ?? 0),
-          holiday_charges: Number(calculation?.holiday_charges ?? 0),
-          security_deposit: Number(calculation?.security_deposit ?? 0),
-          cgst: Number(calculation?.cgst ?? 0),
-          sgst: Number(calculation?.sgst ?? 0),
-          total_payable: Number(calculation?.total_payable ?? 0)
+        // proceed to calculate summary
+        this.isSubmitting = true;
+        const payload = {
+          premise_id: this.selectedPremise!.id,
+          slot_id: this.selectedSlot!.id,
+          from_date: fromDate,
+          to_date: toDate
         };
-        this.availabilityMessage = '';
-        this.nextStep();
+        this.bookingService.calculateSummary(payload).subscribe({
+          next: (summary) => {
+            this.bookingSummary = summary;
+            this.isSubmitting = false;
+            this.currentStep = 2;
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            this.submitError = this.extractApiMessage(err) || 'Failed to load summary. Please try again.';
+          }
+        });
       },
       error: (err) => {
-        const apiMessage = this.extractApiMessage(err);
-        this.availabilityMessage = apiMessage || this.getNoAvailabilityMessage();
-        this.bookingSummary = null;
+        this.isSubmitting = false;
+        this.submitError = this.extractApiMessage(err) || 'Availability check failed. Please try again.';
       }
     });
-  }
-
-  nextStep(): void {
-    this.currentStep++;
   }
 
   prevStep(): void {
-    this.currentStep--;
+    if (this.currentStep > 1) this.currentStep--;
+  }
+
+  nextStep(): void {
+    if (this.currentStep === 1) {
+      this.loadSummary();
+      return;
+    }
+    if (this.currentStep < 6) this.currentStep++;
   }
 
   onIdProofChange(event: any): void {
-    this.idProofFile = event.target.files[0] || null;
+    const file = (event?.target?.files && event.target.files[0]) || null;
+    this.idProofFile = file;
   }
 
   submitBooking(): void {
-    if (!this.selectedPremise || !this.selectedSlot || !this.bookingSummary) return;
-    if (this.applicantForm.invalid || this.bankForm.invalid) return;
-    if (this.isSelectedSlotUnavailable()) {
-      this.submitError = this.getNoAvailabilityMessage();
-      this.currentStep = 2;
-      return;
-    }
-
-    this.isSubmitting = true;
-    this.submitError = '';
-
-    const formData = new FormData();
-    // ... all your existing formData.append() calls stay the same ...
-    formData.append('premise', String(this.selectedPremise.id));
-    formData.append('slot', String(this.selectedSlot.id));
-    formData.append('from_date', this.dateSlotForm.value.from_date);
-    formData.append('to_date', this.dateSlotForm.value.to_date);
-    formData.append('total_days', String(this.bookingSummary.total_days));
-
-    formData.append('full_name', this.applicantForm.value.full_name);
-    formData.append('address', this.applicantForm.value.address);
-    formData.append('mobile', this.applicantForm.value.mobile);
-    formData.append('alt_mobile', this.applicantForm.value.alt_mobile || '');
-    formData.append('email', this.applicantForm.value.email);
-    formData.append('function_name', this.applicantForm.value.function_name);
-    formData.append('function_type', this.applicantForm.value.function_type);
-    formData.append('expected_guests', String(this.applicantForm.value.expected_guests));
-    formData.append('id_proof_type', this.applicantForm.value.id_proof_type);
-    formData.append('id_proof_number', this.applicantForm.value.id_proof_number);
-    if (this.idProofFile) {
-      formData.append('id_proof_file', this.idProofFile);
-    }
-
-    formData.append('bank_name', this.bankForm.value.bank_name);
-    formData.append('account_holder', this.bankForm.value.account_holder);
-    formData.append('account_number', this.bankForm.value.account_number);
-    formData.append('ifsc_code', this.bankForm.value.ifsc_code);
-    formData.append('branch_name', this.bankForm.value.branch_name);
-    formData.append('micr_code', this.bankForm.value.micr_code || '');
-
-    formData.append('base_rent', String(this.bookingSummary.base_rent));
-    formData.append('holiday_charges', String(this.bookingSummary.holiday_charges));
-    formData.append('security_deposit', String(this.bookingSummary.security_deposit));
-    formData.append('cgst', String(this.bookingSummary.cgst));
-    formData.append('sgst', String(this.bookingSummary.sgst));
-    formData.append('total_payable', String(this.bookingSummary.total_payable));
-    formData.append('payment_mode', this.paymentMode);
-
-    this.bookingService.createBooking(formData).subscribe({
-      next: (booking: any) => {
-        const responseData = booking?.data ?? booking;
-        this.bookingPk = responseData?.id ?? booking?.id ?? null;
-        this.bookingId = responseData?.temp_booking_id ?? responseData?.booking_id ?? responseData?.bookingId ?? booking?.booking_id ?? '';
-        this.isSubmitting = false;
-        this.submitError = '';
-        this.currentStep = 7;
-      },
-      error: (err) => {
-        this.isSubmitting = false;
-        this.submitError = this.extractApiMessage(err) || 'Booking failed. Please try again.';
+      if (!this.selectedPremise || !this.selectedSlot || !this.bookingSummary) return;
+      if (this.applicantForm.invalid || this.bankForm.invalid) return;
+      if (this.isSelectedSlotUnavailable()) {
+        this.submitError = this.getNoAvailabilityMessage();
+        this.currentStep = 1;
+        return;
       }
-    });
-  }
+
+      this.isSubmitting = true;
+      this.submitError = '';
+
+      const formData = new FormData();
+      formData.append('premise', String(this.selectedPremise!.id));
+      formData.append('slot', String(this.selectedSlot!.id));
+      formData.append('from_date', this.dateSlotForm.value.from_date);
+      formData.append('to_date', this.dateSlotForm.value.to_date);
+      formData.append('total_days', String(this.bookingSummary.total_days));
+
+      formData.append('full_name', this.applicantForm.value.full_name);
+      formData.append('address', this.applicantForm.value.address);
+      formData.append('mobile', this.applicantForm.value.mobile);
+      formData.append('alt_mobile', this.applicantForm.value.alt_mobile || '');
+      formData.append('email', this.applicantForm.value.email);
+      formData.append('function_name', this.applicantForm.value.function_name);
+      formData.append('function_type', this.applicantForm.value.function_type);
+      formData.append('expected_guests', String(this.applicantForm.value.expected_guests));
+      formData.append('id_proof_type', this.applicantForm.value.id_proof_type);
+      formData.append('id_proof_number', this.applicantForm.value.id_proof_number);
+      if (this.idProofFile) {
+        formData.append('id_proof_file', this.idProofFile);
+      }
+
+      formData.append('bank_name', this.bankForm.value.bank_name);
+      formData.append('account_holder', this.bankForm.value.account_holder);
+      formData.append('account_number', this.bankForm.value.account_number);
+      formData.append('ifsc_code', this.bankForm.value.ifsc_code);
+      formData.append('branch_name', this.bankForm.value.branch_name);
+      formData.append('micr_code', this.bankForm.value.micr_code || '');
+
+      formData.append('base_rent', String(this.bookingSummary.base_rent));
+      formData.append('holiday_charges', String(this.bookingSummary.holiday_charges));
+      formData.append('security_deposit', String(this.bookingSummary.security_deposit));
+      formData.append('cgst', String(this.bookingSummary.cgst));
+      formData.append('sgst', String(this.bookingSummary.sgst));
+      formData.append('total_payable', String(this.bookingSummary.total_payable));
+      formData.append('payment_mode', this.paymentMode);
+
+      this.bookingService.createBooking(formData).subscribe({
+        next: (booking: any) => {
+          const responseData = booking?.data ?? booking;
+          this.bookingPk = responseData?.id ?? booking?.id ?? null;
+          this.bookingId = responseData?.temp_booking_id ?? responseData?.booking_id ?? responseData?.bookingId ?? booking?.booking_id ?? '';
+          this.isSubmitting = false;
+          this.submitError = '';
+          this.currentStep = 6;
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.submitError = this.extractApiMessage(err) || 'Booking failed. Please try again.';
+        }
+      });
+    }
 
   openRazorpay(order: any): void {
     const payer = this.paymentBooking || {};
@@ -689,7 +693,7 @@ export class BookingComponent implements OnInit {
       next: (result: any) => {
         this.bookingId = result?.finalBookingId || this.bookingId;
         this.isSubmitting = false;
-        this.currentStep = 7; // show success screen
+        this.currentStep = 6; // show success screen
       },
       error: () => {
         this.isSubmitting = false;
@@ -754,6 +758,10 @@ export class BookingComponent implements OnInit {
     this.bankForm.reset();
   }
 
+  isSelectedSlotUnavailable(): boolean {
+    return !!(this.selectedSlot && this.bookedSlotIds.includes(this.selectedSlot.id));
+  }
+
   private refreshBookedSlotsForDateRange(): void {
     if (!this.selectedPremise) {
       this.bookedSlotIds = [];
@@ -779,61 +787,62 @@ export class BookingComponent implements OnInit {
       return;
     }
 
-    const checks = dates.map((date) => this.bookingService.checkAvailability(this.selectedPremise!.id, date));
-    forkJoin(checks).subscribe({
-      next: (responses) => {
-        const blocked = new Set<number>();
-        responses.forEach((response) => {
-          (response.booked_slots || []).forEach((slotId) => blocked.add(slotId));
-        });
-        this.bookedSlotIds = Array.from(blocked);
+    this.bookingService.checkAvailabilityRange(this.selectedPremise!.id, fromDate, toDate, this.selectedSlot?.id).subscribe({
+      next: (res) => {
+        try {
+          const datesObj = res?.dates || {};
+          const blocked = new Set<number>();
+          Object.values(datesObj).forEach((d: any) => {
+            const slots = d.slots || {};
+            Object.entries(slots).forEach(([slotId, status]: any) => {
+              if (status === 'booked') blocked.add(Number(slotId));
+            });
+          });
+          this.bookedSlotIds = Array.from(blocked);
 
-        if (this.selectedSlot && blocked.has(this.selectedSlot.id)) {
-          this.selectedSlot = null;
-          this.availabilityMessage = this.getNoAvailabilityMessage();
+          if (this.selectedSlot && blocked.has(this.selectedSlot.id)) {
+            this.selectedSlot = null;
+            this.availabilityMessage = this.getNoAvailabilityMessage();
+          } else {
+            this.availabilityMessage = '';
+          }
+
+          // if specific conflicting dates provided, surface them
+          const conflicts = res?.conflicting_dates || [];
+          if (conflicts && conflicts.length) {
+            this.availabilityMessage = 'The following dates are unavailable: ' + conflicts.join(', ');
+          }
+        } catch (e) {
+          this.bookedSlotIds = [];
+          this.availabilityMessage = '';
         }
       },
       error: () => {
         this.bookedSlotIds = [];
+        this.availabilityMessage = '';
       }
     });
   }
 
   private buildDateRange(fromDate: string, toDate: string): string[] {
-    const start = new Date(`${fromDate}T00:00:00Z`);
-    const end = new Date(`${toDate}T00:00:00Z`);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
-      return [];
-    }
-
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
     const dates: string[] = [];
-    for (let current = new Date(start); current <= end; current.setUTCDate(current.getUTCDate() + 1)) {
-      dates.push(current.toISOString().slice(0, 10));
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split('T')[0]);
     }
     return dates;
   }
 
-  private extractApiMessage(error: any): string {
-    const apiError = error?.error;
-    if (!apiError) {
-      return '';
-    }
-    if (typeof apiError === 'string') {
-      return apiError;
-    }
-    if (apiError.error) {
-      return String(apiError.error);
-    }
-    if (apiError.message) {
-      return String(apiError.message);
-    }
-    if (Array.isArray(apiError.non_field_errors) && apiError.non_field_errors.length) {
-      return String(apiError.non_field_errors[0]);
-    }
-    return '';
+  private getNoAvailabilityMessage(): string {
+    return 'Selected slot is not available. Please choose another slot or date.';
   }
 
-  private getNoAvailabilityMessage(): string {
-    return 'No booking available for the date & time selected. Please select another date, time & slot (session).';
+  private extractApiMessage(err: any): string | null {
+    try {
+      return err?.error?.message || err?.message || null;
+    } catch (e) {
+      return null;
+    }
   }
 }
