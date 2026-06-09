@@ -10,7 +10,7 @@ SMS_APPID     = config('SMS_APPID',     default='MahaITsomc')
 SMS_USER      = config('SMS_USER',      default='MahaITsomc')
 SMS_PASS      = config('SMS_PASS',      default='mitsomc_10')
 SMS_SENDER    = config('SMS_SENDER',    default='MAHGOV')
-SMS_DLT_TE_ID = config('SMS_DLT_TE_ID', default='')
+SMS_DLT_TE_ID = config('SMS_DLT_TE_ID', default='1307162038357069431')  # DLT Template ID for booking confirmation (update as needed)
 
 # Force IPv4 — ACL gateway does not support IPv6
 original_getaddrinfo = socket.getaddrinfo
