@@ -64,27 +64,27 @@ export default function Book() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="container" style={{ paddingTop: 18 }}>
       <Head>
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </Head>
       <h1>Book venue</h1>
-      <form onSubmit={handlePay}>
-        <div>
-          <label>Name</label>
-          <input value={name} onChange={e => setName(e.target.value)} required />
+      <form onSubmit={handlePay} className="main">
+        <div className="form-group">
+          <label htmlFor="name">Name</label>
+          <input id="name" name="name" value={name} onChange={e => setName(e.target.value)} required aria-required />
         </div>
-        <div>
-          <label>Mobile</label>
-          <input value={mobile} onChange={e => setMobile(e.target.value)} required />
+        <div className="form-group">
+          <label htmlFor="mobile">Mobile</label>
+          <input id="mobile" name="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required aria-required inputMode="tel" />
         </div>
-        <div>
-          <label>Amount (INR)</label>
-          <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} />
+        <div className="form-group">
+          <label htmlFor="amount">Amount (INR)</label>
+          <input id="amount" name="amount" type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} />
         </div>
         <button type="submit" disabled={loading}>{loading ? 'Processing...' : 'Pay Now'}</button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p style={{ marginTop: 12 }}>{message}</p>}
     </div>
   );
 }

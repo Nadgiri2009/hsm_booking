@@ -862,6 +862,20 @@ body .contact-page .btn-send:disabled {
   }
 }
 
+/* Admin-specific small-screen adjustments */
+@media (max-width: 900px) {
+  /* hide the fixed sidebar on small screens and let the mobile panel handle navigation */
+  body .sidebar { display: none !important; }
+
+  /* admin layout should use full width */
+  body .admin-layout { padding: 0 !important; gap: 0 !important; }
+  body .admin-main { margin: 0 !important; width: 100% !important; min-width: 0 !important; border-radius: 0 !important; }
+
+  /* ensure topbars and mobile nav appear above content */
+  body .admin-topbar { position: sticky !important; top: 0; z-index: 2200 !important; }
+  .site-navbar { z-index: 2250 !important; }
+}
+
 /* 640px – large phones */
 @media (max-width: 640px) {
   body .page-header {
@@ -1104,3 +1118,18 @@ body .contact-page .btn-send:disabled {
     padding: 0.6rem !important;
   }
 }
+
+/* Utility helpers */
+.u-hidden { display: none !important; }
+.u-flex { display: flex !important; }
+.u-center { display:flex !important; align-items:center !important; justify-content:center !important; }
+.u-gap-1 { gap: 0.5rem !important; }
+.u-gap-2 { gap: 1rem !important; }
+.u-p-1 { padding: 0.5rem !important; }
+.u-p-2 { padding: 1rem !important; }
+.text-sm { font-size: 0.875rem !important; }
+.text-xs { font-size: 0.75rem !important; }
+.touch { min-height:44px; }
+
+/* Prevent background scroll when nav open */
+.nav-open { overflow: hidden; }

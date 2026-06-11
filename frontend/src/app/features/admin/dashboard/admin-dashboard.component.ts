@@ -42,7 +42,7 @@ import { ApiService } from '../../../core/services/api.service';
       <main class="admin-main">
         <div class="admin-topbar">
           <div class="topbar-left">
-            <button class="menu-toggle" (click)="toggleSidebar()">☰</button>
+            <button type="button" class="menu-toggle" (click)="toggleSidebar()" aria-controls="sidebar" aria-expanded="false">☰</button>
             <h2>Admin Dashboard</h2>
           </div>
           <div class="admin-user">👤 {{ getDisplayName(auth.currentUser$ | async) }}</div>
@@ -80,8 +80,8 @@ import { ApiService } from '../../../core/services/api.service';
     </div>
   `,
   styles: [`
-    .admin-layout { display:flex; min-height:100vh; }
-    .sidebar { width:240px; background:linear-gradient(180deg, rgba(250,240,224,.96), rgba(236,247,251,.96)); color:var(--ocean-deep); display:flex; flex-direction:column; flex-shrink:0; transition:width .2s ease; border:1px solid var(--line); box-shadow:0 16px 36px rgba(22,31,45,.08); }
+    .admin-layout { display:flex; min-height:100vh; align-items:stretch; }
+    .sidebar { width:240px; background:linear-gradient(180deg, rgba(250,240,224,.96), rgba(236,247,251,.96)); color:var(--ocean-deep); display:flex; flex-direction:column; flex-shrink:0; transition:width .2s ease; border:1px solid var(--line); box-shadow:0 16px 36px rgba(22,31,45,.08); margin:0; border-radius:0; }
     .sidebar.collapsed { width:72px; }
     .sidebar-header { display:flex; align-items:center; gap:.75rem; padding:1.5rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.1); }
     .sidebar-logo { font-size:2rem; }
@@ -98,6 +98,8 @@ import { ApiService } from '../../../core/services/api.service';
     .admin-topbar { background:rgba(255,255,255,.8); padding:1rem 1.5rem; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
     .topbar-left { display:flex; align-items:center; gap:.8rem; }
     .menu-toggle {
+      position: relative;
+      z-index: 2360; /* ensure button is above fixed sidebar */
       border:1px solid rgba(18,93,110,.2);
       background:rgba(255,255,255,.84);
       color:var(--ocean-deep);
@@ -150,7 +152,7 @@ import { ApiService } from '../../../core/services/api.service';
     .admin-content { flex:1; padding:1.5rem; overflow:auto; }
 
     @media (max-width: 900px) {
-      .sidebar { position: fixed; z-index: 1100; height: 100vh; left: 0; top: 0; }
+      .sidebar { position: fixed; z-index: 1100; height: 100vh; left: 0; top: 0; bottom: 0; margin: 0; border-radius: 0; }
       .sidebar.collapsed { transform: translateX(-100%); width: 240px; }
       .admin-main { margin-left: 0; }
       .global-search-wrap { flex-direction: column; }

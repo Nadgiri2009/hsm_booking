@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { LanguageService } from '../../../core/services/language.service';
@@ -45,12 +45,13 @@ import { AuthService } from '../../../core/services/auth.service';
           <button *ngIf="auth.isLoggedIn" class="logout-btn" (click)="logout()">{{ lang.get('nav.logout') }}</button>
         </div>
 
-        <button class="menu-toggle mobile-only" (click)="menuOpen = !menuOpen" aria-label="Toggle menu">
+        <button #menuToggle type="button" class="menu-toggle mobile-only" (click)="toggleMenu($event)" [class.open]="menuOpen" aria-label="Toggle menu" [attr.aria-expanded]="menuOpen" [attr.aria-controls]="'mobile-panel'">
           <span></span><span></span><span></span>
         </button>
       </div>
+      <div *ngIf="menuOpen" class="mobile-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
 
-      <div class="mobile-panel" [class.open]="menuOpen">
+      <div #mobilePanel id="mobile-panel" class="mobile-panel" [class.open]="menuOpen" role="menu" [attr.aria-hidden]="!menuOpen">
         <a
           *ngFor="let item of navItems"
           [routerLink]="item.route"
@@ -221,6 +222,20 @@ import { AuthService } from '../../../core/services/auth.service';
       background: #134458;
       display: block;
       border-radius: 2px;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    .menu-toggle.open span:nth-child(1) {
+      transform: translateY(6px) rotate(45deg);
+    }
+
+    .menu-toggle.open span:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0.2);
+    }
+
+    .menu-toggle.open span:nth-child(3) {
+      transform: translateY(-6px) rotate(-45deg);
     }
 
     .mobile-only {
@@ -250,24 +265,51 @@ import { AuthService } from '../../../core/services/auth.service';
         min-width: unset;
       }
 
-      .mobile-panel.open {
+      .mobile-panel {
         display: grid;
         gap: 0.45rem;
         padding: 0.75rem 0 1rem;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: min(320px, 78%);
+        transform: translateX(-110%);
+        transition: transform 220ms ease;
+        z-index: 2350; /* raised so panel appears above topbars/navbar */
+        overflow: auto;
+        padding-top: 1.1rem;
+        background: linear-gradient(105deg, rgba(248, 231, 207, 0.98), rgba(227, 242, 250, 0.98));
+        border-right: 1px solid rgba(29, 62, 74, 0.06);
+        box-shadow: 4px 10px 30px rgba(16, 30, 36, 0.18);
+      }
+
+      .mobile-panel.open {
+        transform: translateX(0) !important; /* emergency override to ensure panel comes into view */
+        display: grid !important;
+        pointer-events: auto;
       }
 
       .mobile-panel a,
       .mobile-panel button {
         display: block;
         width: 100%;
-        text-align: center;
+        text-align: left;
         text-decoration: none;
         color: #123848;
-        border: 1px solid rgba(23, 59, 70, 0.2);
+        border: 1px solid rgba(23, 59, 70, 0.06);
         border-radius: 11px;
-        background: rgba(255, 255, 255, 0.78);
-        padding: 0.58rem 0.7rem;
-        font-size: 0.85rem;
+        background: rgba(255, 255, 255, 0.88);
+        padding: 0.58rem 0.9rem;
+        font-size: 0.95rem;
+      }
+
+      .mobile-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.36);
+        z-index: 2340; /* sit below panel but above most content */
+        pointer-events: auto;
       }
 
       .mobile-panel a.active {
@@ -294,16 +336,70 @@ export class NavbarComponent {
     { labelKey: 'nav.contact', route: '/contact' }
   ];
 
-  menuOpen = false;
+  private _menuOpen = false;
+  @ViewChild('mobilePanel', { static: false }) mobilePanel?: ElementRef<HTMLDivElement>;
+  @ViewChild('menuToggle', { static: false }) menuToggle?: ElementRef<HTMLButtonElement>;
+
+  get menuOpen() { return this._menuOpen; }
+  set menuOpen(val: boolean) {
+    this._menuOpen = val;
+    // prevent background scroll when menu is open
+    try {
+      if (val) document.body.classList.add('nav-open');
+      else document.body.classList.remove('nav-open');
+    } catch {}
+    if (val) setTimeout(() => this.focusFirst(), 50);
+  }
 
   constructor(public lang: LanguageService, public auth: AuthService) {}
 
   closeMenu(): void {
     this.menuOpen = false;
+    try { this.menuToggle?.nativeElement.focus(); } catch {}
+  }
+
+  toggleMenu(e?: Event): void {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('Navbar toggleMenu called, previous:', this.menuOpen);
+    this.menuOpen = !this.menuOpen;
+    console.log('Navbar menuOpen now:', this.menuOpen);
   }
 
   logout(): void {
     this.menuOpen = false;
     this.auth.logout();
+  }
+
+  private focusFirst(): void {
+    if (!this.mobilePanel) return;
+    const el = this.mobilePanel.nativeElement.querySelector('a,button,[tabindex]:not([tabindex="-1"])') as HTMLElement | null;
+    if (el) el.focus();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeydown(e: KeyboardEvent): void {
+    if (!this.menuOpen) return;
+    if (e.key === 'Escape') {
+      this.menuOpen = false;
+      return;
+    }
+
+    if (e.key === 'Tab' && this.mobilePanel) {
+      const focusable = Array.from(this.mobilePanel.nativeElement.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])')) as HTMLElement[];
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
   }
 }
