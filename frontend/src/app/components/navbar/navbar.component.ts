@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -22,7 +21,6 @@ export class NavbarComponent implements OnInit {
   ];
 
   constructor(
-    public translate: TranslateService,
     public authService: AuthService,
     private router: Router
   ) {}
@@ -34,7 +32,7 @@ export class NavbarComponent implements OnInit {
 
   toggleLanguage(): void {
     this.currentLang = this.currentLang === 'en' ? 'mr' : 'en';
-    this.translate.use(this.currentLang);
+    // ngx-translate is not used here; persist language selection only
     localStorage.setItem('hsm_lang', this.currentLang);
   }
 
@@ -45,5 +43,10 @@ export class NavbarComponent implements OnInit {
 
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  goToBooking(): void {
+    this.mobileMenuOpen = false;
+    this.router.navigate(['/booking']);
   }
 }

@@ -26,6 +26,17 @@
   --transition: 180ms ease;
 }
 
+/* CSS Variables */
+:root {
+  --primary-dark: #1a237e;
+  --primary: #283593;
+  --accent: #ff6f00;
+  --transition: all 0.2s ease;
+  --line: #e0e0e0;
+  --ocean: #0d7488;
+  --ocean-deep: #0a5c6e;
+}
+
 * {
   box-sizing: border-box;
 }

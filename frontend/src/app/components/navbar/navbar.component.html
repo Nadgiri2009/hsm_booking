@@ -12,7 +12,7 @@
         <mat-icon>language</mat-icon>
         <span>{{ currentLang === 'en' ? 'मराठी' : 'English' }}</span>
       </button>
-      <button mat-raised-button color="primary" routerLink="/booking" class="book-btn">
+      <button mat-raised-button color="primary" (click)="goToBooking()" class="book-btn">
         <mat-icon>event</mat-icon>
         {{ 'HOME.BOOK_NOW' | translate }}
       </button>
@@ -49,5 +49,17 @@
         </a>
       </li>
     </ul>
+    
+
+    <div class="mobile-actions">
+      <button class="lang-toggle" (click)="toggleLanguage()" title="Switch Language">
+        <mat-icon>language</mat-icon>
+        <span>{{ currentLang === 'en' ? 'मराठी' : 'English' }}</span>
+      </button>
+      <button mat-raised-button color="primary" (click)="goToBooking()" class="book-btn">
+        <mat-icon>event</mat-icon>
+        {{ 'HOME.BOOK_NOW' | translate }}
+      </button>
+    </div>
   </div>
 </nav>

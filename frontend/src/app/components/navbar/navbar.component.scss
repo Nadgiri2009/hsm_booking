@@ -99,10 +99,24 @@
   mat-icon { font-size: 28px; }
 }
 
+.mobile-actions {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  .navbar-actions { display: none; }
-  .mobile-menu-btn { display: flex; align-items: center; }
-  .navbar-top { padding: 8px 16px; }
+  .navbar-actions { 
+    display: none; 
+  }
+  
+  .mobile-menu-btn { 
+    display: flex !important; 
+    align-items: center; 
+  }
+  
+  .navbar-top { 
+    padding: 8px 16px; 
+  }
+  
   .navbar-brand {
     .logo { width: 44px; height: 44px; }
     .brand-text {
@@ -110,52 +124,61 @@
       .brand-sub { font-size: 0.68rem; }
     }
   }
+
   .navbar-bottom {
-    display: none;
-    &.open { display: block; }
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    display: block !important; /* always in DOM */
+    
+    &.open { 
+      max-height: 500px; /* animate open */
+    }
   }
+
   .nav-links {
     flex-direction: column;
     align-items: stretch;
+    
     li a {
       border-bottom: 1px solid rgba(255,255,255,0.1);
       border-left: 3px solid transparent;
       padding: 14px 20px;
-      min-height: 48px; /* touch target */
+      min-height: 48px;
     }
-    li a.active { border-left-color: var(--accent); border-bottom: none; }
-  }
-}
-
-/* 425px – large phones */
-@media (max-width: 425px) {
-  .navbar-top { padding: 8px 12px; gap: 10px; }
-  .navbar-brand {
-    .logo { width: 38px; height: 38px; }
-    .brand-text {
-      .brand-main { font-size: 0.82rem; }
-      .brand-sub { display: none; }
+    
+    li a.active { 
+      border-left-color: var(--accent); 
+      border-bottom: none; 
     }
   }
-  .nav-links li a { padding: 13px 16px; font-size: 0.88rem; }
+
+  .mobile-actions {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    
+    .lang-toggle, .book-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
 }
 
-/* 375px – standard mobile */
-@media (max-width: 375px) {
-  .navbar-brand {
-    .logo { width: 34px; height: 34px; }
-    .brand-text .brand-main { font-size: 0.78rem; }
-  }
-  .mobile-menu-btn mat-icon { font-size: 24px; }
-  .nav-links li a { padding: 12px 14px; font-size: 0.85rem; }
+/* Force navbar visible on all screen sizes */
+.navbar {
+  display: block !important;
+  width: 100% !important;
 }
 
-/* 320px – smallest phones */
-@media (max-width: 320px) {
-  .navbar-top { padding: 6px 10px; }
-  .navbar-brand {
-    .logo { width: 30px; height: 30px; }
-    .brand-text .brand-main { font-size: 0.74rem; }
-  }
-  .nav-links li a { padding: 11px 12px; font-size: 0.82rem; }
+.navbar-top {
+  display: flex !important;
+  width: 100% !important;
+}
+
+.mobile-menu-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
