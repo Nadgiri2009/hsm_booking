@@ -188,11 +188,7 @@ import { ActivatedRoute } from '@angular/router';
 
     .no-results { text-align:center; padding:3rem; color:#666; }
 
-    @media (max-width: 640px) {
-      .search-box { flex-direction: column; }
-      .form-row { grid-template-columns:1fr; }
-      .tab-switch { flex-direction:column; }
-    }
+    /* Responsiveness removed — desktop/web-only styles */
   `]
 })
 export class PrintBookingComponent {

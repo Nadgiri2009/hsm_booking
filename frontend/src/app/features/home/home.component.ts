@@ -494,67 +494,7 @@ import { LanguageService } from '../../core/services/language.service';
       }
     }
 
-    @media (max-width: 1180px) {
-      .hero-stage {
-        height: clamp(400px, 52vh, 500px);
-        min-height: 400px;
-      }
-
-      .quick-access-grid,
-      .quick-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .premises-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 820px) {
-      .quick-access-grid,
-      .quick-grid,
-      .premises-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 640px) {
-      .home-page {
-        padding-top: 0.8rem;
-        padding-inline: 0.55rem;
-      }
-
-      .hero-stage {
-        height: clamp(330px, 46vh, 410px);
-        min-height: 330px;
-        border-radius: 20px;
-      }
-
-      .slide-content {
-        padding: 1.15rem;
-      }
-
-      .slide-content h1 {
-        font-size: clamp(1.65rem, 8vw, 2.25rem);
-      }
-
-      .slide-content p {
-        font-size: 0.9rem;
-        margin-bottom: 1.2rem;
-      }
-
-      .slider-btn {
-        height: 38px;
-        width: 38px;
-      }
-
-      .quick-access-grid,
-      .quick-grid,
-      .premises-grid,
-      .notice-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    /* Responsiveness removed — desktop/web-only styles for home page */
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy {

@@ -30,51 +30,118 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
         <!-- Merged Step 1: Booking Details (Premise + Date & Slot) -->
         <div class="step-content" *ngIf="currentStep === 1">
           <h2>{{ lang.get('booking.selectPremise') }}</h2>
-          <div class="premise-cards">
-            <div class="premise-select-card"
-              *ngFor="let p of premises"
-              [class.selected]="selectedPremise?.id === p.id"
-              (click)="selectPremise(p)">
-              <h3>{{ p.name }}</h3>
-              <p>Capacity: {{ p.capacity }} persons</p>
-              <p class="rent">Base Rent: ₹{{ p.base_rent | number }}/day</p>
-              <p class="deposit">Security Deposit: ₹{{ p.security_deposit | number }}</p>
+
+          <div class="premise-dropdown-wrap">
+            <label>Select Premise</label>
+            <select (change)="onPremiseDropdownChange($event)">
+              <option value="">-- {{ lang.get('booking.selectPremise') }} --</option>
+              <option *ngFor="let p of premises" [value]="p.id">{{ p.name }}</option>
+            </select>
+          </div>
+
+          <div class="premise-info-strip" *ngIf="selectedPremise">
+            <div class="info-chip">Capacity: <strong>{{ selectedPremise.capacity }}</strong></div>
+            <div class="info-chip">Base Rent: <strong>₹{{ selectedPremise.base_rent | number }}</strong></div>
+            <div class="info-chip">Security Deposit: <strong>₹{{ selectedPremise.security_deposit | number }}</strong></div>
+          </div>
+
+          <!-- Rate details derived from official PDF rate-card (shown per session using base rent × multiplier) -->
+          <div class="rate-card" *ngIf="selectedPremise">
+            <h3 style="margin:0.5rem 0">Rate Details (from rate card)</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:0.5rem">
+              <thead>
+                <tr>
+                  <th style="text-align:left; padding:0.5rem; border-bottom:1px solid #eee">Session</th>
+                  <th style="text-align:left; padding:0.5rem; border-bottom:1px solid #eee">Multiplier</th>
+                  <th style="text-align:left; padding:0.5rem; border-bottom:1px solid #eee">Charge (per day)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of timeSlots">
+                  <td style="padding:0.45rem">{{ s.name }}</td>
+                  <td style="padding:0.45rem">{{ s.multiplier }}</td>
+                  <td style="padding:0.45rem">₹{{ (+selectedPremise.base_rent * +s.multiplier) | number:'1.2-2' }}</td>
+                </tr>
+                <tr *ngIf="!timeSlots.length"><td colspan="3" style="padding:0.45rem">No sessions configured for this premise.</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:0.5rem; font-size:0.9rem; color:#555">Note: Extra charges apply for Saturday, Sunday and public holidays as per the official rate card PDF.</div>
+          </div>
+
+          <!-- Inline Calendar (appears after premise selected) -->
+          <div class="calendar-container" *ngIf="selectedPremise">
+            <div class="calendar-header">
+              <div class="cal-nav">
+                <button (click)="prevCalendarMonth()">‹</button>
+                <div class="cal-month-label">{{ getCalendarMonthLabel() }}</div>
+                <button (click)="nextCalendarMonth()">›</button>
+              </div>
+            </div>
+
+            <div class="calendar-grid">
+              <div class="cal-day-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">{{ d }}</div>
+              <ng-container *ngFor="let week of getCalendarWeeks()">
+                <ng-container *ngFor="let day of week">
+                  <div
+                    class="cal-day"
+                    [class.past]="isPastDate(day)"
+                    [class.today]="isCalendarToday(day)"
+                    [class.range-start]="isCalendarRangeStart(day)"
+                    [class.range-end]="isCalendarRangeEnd(day)"
+                    [class.in-range]="isCalendarInRange(day)"
+                    (click)="!isPastDate(day) && onCalendarDayClick(day)">
+                    {{ getDayNum(day) }}
+                  </div>
+                </ng-container>
+              </ng-container>
+            </div>
+
+            <div class="cal-selection-info">
+              <span *ngIf="calendarSelectedFrom">From: {{ calendarSelectedFrom }}</span>
+              <span *ngIf="calendarSelectedTo"> &nbsp; To: {{ calendarSelectedTo }}</span>
+              <button type="button" class="btn-next" *ngIf="calendarSelectedFrom && calendarSelectedTo" (click)="dateSlotForm.patchValue({ from_date: calendarSelectedFrom, to_date: calendarSelectedTo })">Confirm Dates</button>
             </div>
           </div>
 
-          <h2 style="margin-top:1.75rem">{{ lang.get('booking.selectDate') }} & {{ lang.get('booking.selectSlot') }}</h2>
-          <form [formGroup]="dateSlotForm">
-            <div class="form-row">
-              <div class="form-group">
-                <label>From Date *</label>
-                <input type="date" formControlName="from_date" [min]="today">
-              </div>
-              <div class="form-group">
-                <label>To Date *</label>
-                <input type="date" formControlName="to_date" [min]="dateSlotForm.get('from_date')?.value || today">
-              </div>
-            </div>
-            <div class="form-group" *ngIf="timeSlots.length">
-              <label>{{ lang.get('booking.selectSlot') }} *</label>
-              <div class="slot-grid">
-                <div class="slot-card"
-                  *ngFor="let slot of timeSlots"
-                  [class.selected]="selectedSlot?.id === slot.id"
-                  [class.booked]="isSlotBooked(slot.id)"
-                  (click)="!isSlotBooked(slot.id) && selectSlot(slot)">
-                  <strong>{{ slot.name }}</strong>
-                  <span>{{ slot.start_time }} – {{ slot.end_time }}</span>
-                  <span *ngIf="isSlotBooked(slot.id)" class="booked-label">Booked</span>
-                </div>
-              </div>
-            </div>
-            <div class="warning-box" *ngIf="availabilityMessage">
-              {{ availabilityMessage }}
-            </div>
-          </form>
+          <!-- Slot selection table — show after start date picked -->
+          <div *ngIf="calendarSelectedFrom" class="form-group slot-table-wrap">
+            <label>{{ lang.get('booking.selectSlot') }} *</label>
+            <table class="slot-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Session</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let slot of timeSlots; let i = index" [class.selected]="selectedSlot?.id === slot.id">
+                  <td>{{ i+1 }}</td>
+                  <td>{{ slot.name }}</td>
+                  <td>{{ slot.start_time }} – {{ slot.end_time }}</td>
+                  <td>
+                    <span class="status-badge" [class.booked]="isSlotBooked(slot.id)" [class.available]="!isSlotBooked(slot.id)">
+                      {{ isSlotBooked(slot.id) ? 'Booked' : 'Available' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button type="button" class="btn-slot-select" [disabled]="isSlotBooked(slot.id)" (click)="selectSlot(slot)">
+                      {{ selectedSlot?.id === slot.id ? 'Selected' : 'Select' }}
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="!timeSlots.length">
+                  <td colspan="5">No slots configured for the selected premise.</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="warning-box" *ngIf="availabilityMessage">{{ availabilityMessage }}</div>
+          </div>
 
           <div class="step-nav" style="margin-top:1.5rem;">
-            <button class="btn-next" [disabled]="!selectedPremise || !dateSlotForm.valid || !selectedSlot || isSelectedSlotUnavailable()" (click)="loadSummary()">
+            <button type="button" class="btn-next" [disabled]="!selectedPremise || !dateSlotForm.valid || !selectedSlot || isSelectedSlotUnavailable()" (click)="loadSummary()">
               Proceed →
             </button>
           </div>
@@ -411,10 +478,43 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
     .success-screen h2 { color: #4caf50; }
     .success-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
 
-    @media (max-width: 600px) {
-      .form-row { grid-template-columns: 1fr; }
-      .payment-options { grid-template-columns: 1fr; }
+
+    /* ← PASTE NEW CSS HERE */
+    .premise-dropdown-wrap { margin-bottom: 1rem; display:flex; flex-direction:column; gap:0.5rem; max-width:420px; width:100%; }
+    .premise-dropdown-wrap select {
+      padding:0.6rem; border-radius:6px; border:1px solid #ccc; width:100%;
+      background: #fff; color: #222; box-sizing: border-box; -webkit-appearance: none; -moz-appearance: none; appearance: none;
     }
+    .premise-dropdown-wrap select option { color: #222; background: #fff; }
+    .premise-info-strip { display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap; }
+    .premise-info-strip { align-items: center; }
+    .info-chip { background:#f5f5f5; padding:0.45rem 0.75rem; border-radius:6px; font-size:0.9rem; }
+
+    .calendar-container { border:1px solid #e6eef0; padding:0.75rem; border-radius:8px; max-width:520px; margin-bottom:1rem; background:white; }
+    .calendar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; }
+    .cal-nav { display:flex; align-items:center; gap:0.75rem; }
+    .cal-nav button { border:none; background:#f0f0f0; padding:0.35rem 0.6rem; border-radius:4px; cursor:pointer; }
+    .cal-month-label { font-weight:700; color:var(--ocean-deep); }
+    .calendar-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:0.25rem; }
+    .cal-day-header { font-size:0.8rem; text-align:center; padding:0.45rem 0; color:#666; }
+    .cal-day { min-height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:6px; }
+    .cal-day.past { color:#bbb; cursor:default; }
+    .cal-day.today { border:1px solid var(--ocean); font-weight:700; }
+    .cal-day.range-start, .cal-day.range-end { background:linear-gradient(90deg,var(--ocean),#0d7488); color:white; }
+    .cal-day.in-range { background:rgba(13,116,136,0.08); }
+    .cal-selection-info { display:flex; gap:0.75rem; align-items:center; margin-top:0.6rem; justify-content:space-between; }
+
+    .slot-table { width:100%; border-collapse:collapse; margin-top:0.75rem; }
+    .slot-table th, .slot-table td { border:1px solid #eef3f3; padding:0.6rem 0.75rem; text-align:left; }
+    .slot-table td:nth-child(3), .slot-table th:nth-child(3) { text-align:center; white-space:nowrap; }
+    .slot-table td:nth-child(5), .slot-table th:nth-child(5) { text-align:center; width:120px; }
+    .slot-table thead th { background:#fafafa; font-weight:700; }
+    .status-badge { padding:0.25rem 0.5rem; border-radius:12px; font-size:0.85rem; display:inline-block; }
+    .status-badge.available { background:#e8f5e9; color:#2e7d32; }
+    .status-badge.booked { background:#ffebee; color:#b71c1c; }
+    .btn-slot-select { padding:0.35rem 0.6rem; border-radius:6px; border:none; background:linear-gradient(135deg,var(--ocean),#0d7488); color:white; cursor:pointer; }
+
+    /* Responsiveness removed: layout is desktop/web-only */
   `]
 })
 export class BookingComponent implements OnInit {
@@ -438,6 +538,11 @@ export class BookingComponent implements OnInit {
   availabilityMap: any = {};
   conflictingDates: string[] = [];
   isAvailabilityConflict = false;
+
+  // ← ADD HERE
+  calendarViewDate: Date = new Date();
+  calendarSelectedFrom: string = '';
+  calendarSelectedTo: string = '';
 
   dateSlotForm: FormGroup;
   applicantForm: FormGroup;
@@ -477,10 +582,8 @@ export class BookingComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.bookingService.getPremises().subscribe({
-      next: (premises) => { this.premises = premises; },
-      error: () => { this.premises = []; }
-    });
+    // Use PDF-derived rate card data for Step 1 (do not rely on API for premise list)
+    this.premises = this.rateCardPremises;
 
     this.dateSlotForm.valueChanges.subscribe(() => {
       this.refreshBookedSlotsForDateRange();
@@ -493,6 +596,7 @@ export class BookingComponent implements OnInit {
   }
 
   selectPremise(p: Premise): void {
+    // when user selects a premise from the PDF-driven list, use its embedded time_slots
     this.selectedPremise = p;
     this.selectedSlot = null;
     this.bookedSlotIds = [];
@@ -500,14 +604,98 @@ export class BookingComponent implements OnInit {
     this.availabilityMessage = '';
     this.submitError = '';
 
-    this.bookingService.getTimeSlots(p.id).subscribe({
-      next: (slots) => { this.timeSlots = slots; },
-      error: () => { this.timeSlots = []; }
-    });
+    // prefer time slots embedded in the rate card data; fall back to API if not present
+    if (p && (p as any).time_slots && (p as any).time_slots.length) {
+      this.timeSlots = (p as any).time_slots as TimeSlot[];
+    } else {
+      this.bookingService.getTimeSlots(p.id).subscribe({
+        next: (slots) => { this.timeSlots = slots; },
+        error: () => { this.timeSlots = []; }
+      });
+    }
 
     // refresh availability for currently selected date range
     this.refreshBookedSlotsForDateRange();
   }
+
+  // PDF-derived rate-card premises (used for Step 1 display)
+  rateCardPremises: (Premise & { time_slots?: TimeSlot[] })[] = [
+    {
+      id: 1,
+      name: 'Hutatma Smruti Mandir - Main Hall',
+      name_mr: '',
+      description: '',
+      capacity: 500,
+      base_rent: 10000,
+      security_deposit: 25000,
+      is_active: true,
+      time_slots: [
+        { id: 1, name: 'Morning Session', start_time: '06:00:00', end_time: '12:00:00', multiplier: 0.5, premise_id: 1 },
+        { id: 2, name: 'Full Day', start_time: '08:00:00', end_time: '22:00:00', multiplier: 1.0, premise_id: 1 },
+        { id: 3, name: 'Evening Session', start_time: '16:00:00', end_time: '23:00:00', multiplier: 0.6, premise_id: 1 }
+      ]
+    },
+    {
+      id: 2,
+      name: 'VIP Room',
+      name_mr: '',
+      description: '',
+      capacity: 50,
+      base_rent: 5000,
+      security_deposit: 10000,
+      is_active: true,
+      time_slots: [
+        { id: 4, name: 'Morning Session', start_time: '06:00:00', end_time: '12:00:00', multiplier: 0.5, premise_id: 2 },
+        { id: 5, name: 'Full Day', start_time: '08:00:00', end_time: '22:00:00', multiplier: 1.0, premise_id: 2 },
+        { id: 6, name: 'Evening Session', start_time: '16:00:00', end_time: '23:00:00', multiplier: 0.6, premise_id: 2 }
+      ]
+    },
+    {
+      id: 3,
+      name: 'Dining Hall',
+      name_mr: '',
+      description: '',
+      capacity: 200,
+      base_rent: 8000,
+      security_deposit: 15000,
+      is_active: true,
+      time_slots: [
+        { id: 7, name: 'Morning Session', start_time: '06:00:00', end_time: '12:00:00', multiplier: 0.5, premise_id: 3 },
+        { id: 8, name: 'Full Day', start_time: '08:00:00', end_time: '22:00:00', multiplier: 1.0, premise_id: 3 },
+        { id: 9, name: 'Evening Session', start_time: '16:00:00', end_time: '23:00:00', multiplier: 0.6, premise_id: 3 }
+      ]
+    },
+    {
+      id: 4,
+      name: 'Art Gallery',
+      name_mr: '',
+      description: '',
+      capacity: 100,
+      base_rent: 6000,
+      security_deposit: 12000,
+      is_active: true,
+      time_slots: [
+        { id: 10, name: 'Morning Session', start_time: '06:00:00', end_time: '12:00:00', multiplier: 0.5, premise_id: 4 },
+        { id: 11, name: 'Full Day', start_time: '08:00:00', end_time: '22:00:00', multiplier: 1.0, premise_id: 4 },
+        { id: 12, name: 'Evening Session', start_time: '16:00:00', end_time: '23:00:00', multiplier: 0.6, premise_id: 4 }
+      ]
+    },
+    {
+      id: 5,
+      name: 'Open Space (Lawn)',
+      name_mr: '',
+      description: '',
+      capacity: 300,
+      base_rent: 10000,
+      security_deposit: 20000,
+      is_active: true,
+      time_slots: [
+        { id: 13, name: 'Morning Session', start_time: '06:00:00', end_time: '12:00:00', multiplier: 0.5, premise_id: 5 },
+        { id: 14, name: 'Full Day', start_time: '08:00:00', end_time: '22:00:00', multiplier: 1.0, premise_id: 5 },
+        { id: 15, name: 'Evening Session', start_time: '16:00:00', end_time: '23:00:00', multiplier: 0.6, premise_id: 5 }
+      ]
+    }
+  ];
 
   isSlotBooked(slotId: number): boolean {
     return this.bookedSlotIds.includes(slotId);
@@ -756,6 +944,108 @@ export class BookingComponent implements OnInit {
     this.dateSlotForm.reset();
     this.applicantForm.reset();
     this.bankForm.reset();
+  }
+
+  onPremiseDropdownChange(event: any): void {
+    const val = event?.target?.value;
+    if (!val) {
+      this.selectedPremise = null;
+      this.timeSlots = [];
+      this.bookedSlotIds = [];
+      this.calendarSelectedFrom = '';
+      this.calendarSelectedTo = '';
+      this.dateSlotForm.patchValue({ from_date: '', to_date: '' });
+      return;
+    }
+    const pid = Number(val);
+    const p = this.premises.find(x => x.id === pid) || null;
+    if (p) this.selectPremise(p);
+  }
+
+  getCalendarMonthLabel(): string {
+    return this.calendarViewDate.toLocaleString(undefined, { month: 'long', year: 'numeric' } as any);
+  }
+
+  prevCalendarMonth(): void {
+    const d = new Date(this.calendarViewDate);
+    d.setMonth(d.getMonth() - 1);
+    this.calendarViewDate = d;
+  }
+
+  nextCalendarMonth(): void {
+    const d = new Date(this.calendarViewDate);
+    d.setMonth(d.getMonth() + 1);
+    this.calendarViewDate = d;
+  }
+
+  getCalendarWeeks(): Date[][] {
+    const weeks: Date[][] = [];
+    const year = this.calendarViewDate.getFullYear();
+    const month = this.calendarViewDate.getMonth();
+    const firstOfMonth = new Date(year, month, 1);
+    const start = new Date(firstOfMonth);
+    start.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
+
+    let cursor = new Date(start);
+    for (let w = 0; w < 6; w++) {
+      const week: Date[] = [];
+      for (let d = 0; d < 7; d++) {
+        week.push(new Date(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      weeks.push(week);
+    }
+    return weeks;
+  }
+
+  getDayNum(day: Date): number {
+    return day.getDate();
+  }
+
+  onCalendarDayClick(day: Date): void {
+    const iso = day.toISOString().split('T')[0];
+    if (!this.calendarSelectedFrom || (this.calendarSelectedFrom && this.calendarSelectedTo)) {
+      this.calendarSelectedFrom = iso;
+      this.calendarSelectedTo = '';
+      this.calendarViewDate = new Date(day);
+    } else {
+      // set end date
+      let from = new Date(this.calendarSelectedFrom);
+      let to = new Date(iso);
+      if (to < from) {
+        // swap
+        const tmp = from; from = to; to = tmp;
+      }
+      this.calendarSelectedFrom = from.toISOString().split('T')[0];
+      this.calendarSelectedTo = to.toISOString().split('T')[0];
+      // automatically update date controls so availability refresh triggers
+      this.dateSlotForm.patchValue({ from_date: this.calendarSelectedFrom, to_date: this.calendarSelectedTo });
+    }
+  }
+
+  isPastDate(day: Date): boolean {
+    const todayStr = this.today;
+    const dStr = day.toISOString().split('T')[0];
+    return dStr < todayStr;
+  }
+
+  isCalendarToday(day: Date): boolean {
+    const todayStr = this.today;
+    return day.toISOString().split('T')[0] === todayStr;
+  }
+
+  isCalendarRangeStart(day: Date): boolean {
+    return !!this.calendarSelectedFrom && (day.toISOString().split('T')[0] === this.calendarSelectedFrom);
+  }
+
+  isCalendarRangeEnd(day: Date): boolean {
+    return !!this.calendarSelectedTo && (day.toISOString().split('T')[0] === this.calendarSelectedTo);
+  }
+
+  isCalendarInRange(day: Date): boolean {
+    if (!this.calendarSelectedFrom || !this.calendarSelectedTo) return false;
+    const d = day.toISOString().split('T')[0];
+    return d >= this.calendarSelectedFrom && d <= this.calendarSelectedTo;
   }
 
   isSelectedSlotUnavailable(): boolean {

@@ -69,8 +69,7 @@ import { ApiService } from '../../../core/services/api.service';
     .edit { background:#00897b; color:#fff; }
     .toggle { background:#6d4c41; color:#fff; }
     .no-results { padding:1rem; border:1px dashed #d8dcf2; border-radius:8px; color:#5f6680; text-align:center; }
-    @media (max-width: 1000px) { .form-grid { grid-template-columns:repeat(2,minmax(160px,1fr)); } }
-    @media (max-width: 640px) { .form-grid { grid-template-columns:1fr; } }
+    /* Responsiveness removed — admin premises form is desktop/web-only */
   `]
 })
 export class PremisesComponent {

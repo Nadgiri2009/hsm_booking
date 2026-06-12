@@ -151,12 +151,7 @@ import { ApiService } from '../../../core/services/api.service';
 
     .admin-content { flex:1; padding:1.5rem; overflow:auto; }
 
-    @media (max-width: 900px) {
-      .sidebar { position: fixed; z-index: 1100; height: 100vh; left: 0; top: 0; bottom: 0; margin: 0; border-radius: 0; }
-      .sidebar.collapsed { transform: translateX(-100%); width: 240px; }
-      .admin-main { margin-left: 0; }
-      .global-search-wrap { flex-direction: column; }
-    }
+    /* Responsiveness removed — admin dashboard is desktop/web-only */
   `]
 })
 export class AdminDashboardComponent {

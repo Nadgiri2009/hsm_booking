@@ -103,68 +103,7 @@
   display: none;
 }
 
-@media (max-width: 768px) {
-  .navbar-actions { 
-    display: none; 
-  }
-  
-  .mobile-menu-btn { 
-    display: flex !important; 
-    align-items: center; 
-  }
-  
-  .navbar-top { 
-    padding: 8px 16px; 
-  }
-  
-  .navbar-brand {
-    .logo { width: 44px; height: 44px; }
-    .brand-text {
-      .brand-main { font-size: 0.88rem; }
-      .brand-sub { font-size: 0.68rem; }
-    }
-  }
-
-  .navbar-bottom {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
-    display: block !important; /* always in DOM */
-    
-    &.open { 
-      max-height: 500px; /* animate open */
-    }
-  }
-
-  .nav-links {
-    flex-direction: column;
-    align-items: stretch;
-    
-    li a {
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      border-left: 3px solid transparent;
-      padding: 14px 20px;
-      min-height: 48px;
-    }
-    
-    li a.active { 
-      border-left-color: var(--accent); 
-      border-bottom: none; 
-    }
-  }
-
-  .mobile-actions {
-    display: flex;
-    gap: 10px;
-    padding: 12px 16px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    
-    .lang-toggle, .book-btn {
-      flex: 1;
-      justify-content: center;
-    }
-  }
-}
+/* Responsiveness removed — desktop/web-only styles. Mobile menu hidden. */
 
 /* Force navbar visible on all screen sizes */
 .navbar {
@@ -178,7 +117,9 @@
 }
 
 .mobile-menu-btn {
-  display: flex !important;
+  display: none !important;
   align-items: center !important;
   justify-content: center !important;
 }
+
+.mobile-actions { display: none !important; }

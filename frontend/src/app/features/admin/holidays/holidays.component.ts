@@ -75,8 +75,7 @@ import { ApiService } from '../../../core/services/api.service';
     .page-actions { display:flex; align-items:center; gap:.55rem; font-size:.84rem; color:#2e3760; }
     .page-actions button { border:1px solid rgba(18,93,110,.18); background:rgba(255,255,255,.84); color:var(--ocean-deep); border-radius:999px; padding:.35rem .7rem; cursor:pointer; font-size:.8rem; }
     .page-actions button:disabled { opacity:.5; cursor:not-allowed; }
-    @media (max-width: 900px) { .form-grid { grid-template-columns:1fr 1fr; } }
-    @media (max-width: 640px) { .form-grid { grid-template-columns:1fr; } }
+    /* Responsiveness removed — admin holidays interface is desktop/web-only */
   `]
 })
 export class HolidaysComponent {

@@ -28,7 +28,4 @@ body {
 /* Smooth transitions globally */
 a, button { transition: all 0.2s ease; }
 
-/* Print styles */
-@media print {
-  .navbar, .footer, .stepper { display: none !important; }
-}
+/* Print styles removed — app is desktop/web-only. Add a dedicated print stylesheet if needed. */

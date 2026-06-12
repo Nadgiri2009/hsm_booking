@@ -248,83 +248,11 @@ import { AuthService } from '../../../core/services/auth.service';
       margin: 0 auto;
     }
 
-    @media (max-width: 1080px) {
-      .desktop-only {
-        display: none;
-      }
-
-      .mobile-only {
-        display: inline-flex;
-      }
-
-      .nav-container {
-        grid-template-columns: 1fr auto;
-      }
-
-      .brand {
-        min-width: unset;
-      }
-
-      .mobile-panel {
-        display: grid;
-        gap: 0.45rem;
-        padding: 0.75rem 0 1rem;
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: min(320px, 78%);
-        transform: translateX(-110%);
-        transition: transform 220ms ease;
-        z-index: 2350; /* raised so panel appears above topbars/navbar */
-        overflow: auto;
-        padding-top: 1.1rem;
-        background: linear-gradient(105deg, rgba(248, 231, 207, 0.98), rgba(227, 242, 250, 0.98));
-        border-right: 1px solid rgba(29, 62, 74, 0.06);
-        box-shadow: 4px 10px 30px rgba(16, 30, 36, 0.18);
-      }
-
-      .mobile-panel.open {
-        transform: translateX(0) !important; /* emergency override to ensure panel comes into view */
-        display: grid !important;
-        pointer-events: auto;
-      }
-
-      .mobile-panel a,
-      .mobile-panel button {
-        display: block;
-        width: 100%;
-        text-align: left;
-        text-decoration: none;
-        color: #123848;
-        border: 1px solid rgba(23, 59, 70, 0.06);
-        border-radius: 11px;
-        background: rgba(255, 255, 255, 0.88);
-        padding: 0.58rem 0.9rem;
-        font-size: 0.95rem;
-      }
-
-      .mobile-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.36);
-        z-index: 2340; /* sit below panel but above most content */
-        pointer-events: auto;
-      }
-
-      .mobile-panel a.active {
-        background: rgba(18, 93, 110, 0.16);
-      }
-
-      .mobile-panel .mobile-book {
-        background: linear-gradient(135deg, #d7751d, #9f3d00);
-      }
-
-      .mobile-panel .admin-btn {
-        background: #d0f4ff;
-        color: #073b5b;
-      }
-    }
+    /* Responsiveness removed — desktop/web-only navigation. Mobile panels hidden. */
+    .mobile-only { display: none; }
+    .desktop-only { display: inline-flex; }
+    .mobile-panel { display: none !important; }
+    .mobile-backdrop { display: none !important; }
   `]
 })
 export class NavbarComponent {

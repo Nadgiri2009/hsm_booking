@@ -54,7 +54,7 @@ import { ApiService } from '../../core/services/api.service';
     .error-msg { background:#ffebee; color:#c62828; border:1px solid #ef9a9a; border-radius:6px; padding:.6rem .75rem; margin-bottom:.75rem; font-size:.88rem; }
     .btn-send { background:linear-gradient(135deg,var(--ocean),#0d7488); color:white; border:none; padding:.75rem 2rem; border-radius:999px; font-size:.95rem; font-weight:600; cursor:pointer; width:100%; }
     .btn-send:disabled { opacity:.6; cursor:not-allowed; }
-    @media(max-width:768px){ .contact-body { grid-template-columns:1fr; } }
+    /* Responsiveness removed — desktop/web-only styles for contact page */
   `]
 })
 export class ContactComponent {

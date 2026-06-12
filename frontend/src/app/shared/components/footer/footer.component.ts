@@ -111,21 +111,7 @@ import { LanguageService } from '../../../core/services/language.service';
     }
     .footer-bottom p { margin: 0.2rem 0; }
 
-    @media (max-width: 900px) {
-      .footer-content {
-        width: calc(100% - 0.75rem);
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        gap: 0.6rem;
-      }
-      .footer-col { padding: 0.75rem; border-radius: 14px; }
-      .footer-bottom { width: calc(100% - 0.75rem); }
-    }
-
-    @media (max-width: 600px) {
-      .footer { padding-top: 0.35rem; }
-      .footer-content { grid-template-columns: 1fr; }
-      .map-placeholder iframe { height: 145px; }
-    }
+    /* Responsiveness removed — footer is desktop/web-only */
   `]
 })
 export class FooterComponent {
