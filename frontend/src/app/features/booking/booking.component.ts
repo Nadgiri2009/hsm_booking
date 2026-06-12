@@ -531,7 +531,7 @@ export class BookingComponent implements OnInit {
   bookingId = '';
   bookingPk: number | null = null;
   paymentBooking: any = null;
-  today = new Date().toISOString().split('T')[0];
+  today: string = '';
   idProofFile: File | null = null;
   availabilityMessage = '';
   submitError = '';
@@ -544,6 +544,19 @@ export class BookingComponent implements OnInit {
   calendarSelectedFrom: string = '';
   calendarSelectedTo: string = '';
 
+  // helper to format/parse dates in local timezone to YYYY-MM-DD
+  private formatDate(d: Date): string {
+    const y = d.getFullYear();
+    const m = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    return `${y}-${m}-${day}`;
+  }
+
+  private parseDateFromYMD(s: string): Date {
+    const [y, m, d] = (s || '').split('-').map((v) => Number(v));
+    return new Date(y, (m || 1) - 1, d || 1);
+  }
+
   dateSlotForm: FormGroup;
   applicantForm: FormGroup;
   bankForm: FormGroup;
@@ -553,6 +566,8 @@ export class BookingComponent implements OnInit {
     private bookingService: BookingService,
     public lang: LanguageService
   ) {
+    // initialize today using local date formatting to avoid timezone shifts
+    this.today = this.formatDate(new Date());
     this.dateSlotForm = this.fb.group({
       from_date: ['', Validators.required],
       to_date: ['', Validators.required]
@@ -1003,21 +1018,21 @@ export class BookingComponent implements OnInit {
   }
 
   onCalendarDayClick(day: Date): void {
-    const iso = day.toISOString().split('T')[0];
+    const iso = this.formatDate(day);
     if (!this.calendarSelectedFrom || (this.calendarSelectedFrom && this.calendarSelectedTo)) {
       this.calendarSelectedFrom = iso;
       this.calendarSelectedTo = '';
       this.calendarViewDate = new Date(day);
     } else {
       // set end date
-      let from = new Date(this.calendarSelectedFrom);
-      let to = new Date(iso);
+      let from = this.parseDateFromYMD(this.calendarSelectedFrom);
+      let to = this.parseDateFromYMD(iso);
       if (to < from) {
         // swap
         const tmp = from; from = to; to = tmp;
       }
-      this.calendarSelectedFrom = from.toISOString().split('T')[0];
-      this.calendarSelectedTo = to.toISOString().split('T')[0];
+      this.calendarSelectedFrom = this.formatDate(from);
+      this.calendarSelectedTo = this.formatDate(to);
       // automatically update date controls so availability refresh triggers
       this.dateSlotForm.patchValue({ from_date: this.calendarSelectedFrom, to_date: this.calendarSelectedTo });
     }
@@ -1025,26 +1040,26 @@ export class BookingComponent implements OnInit {
 
   isPastDate(day: Date): boolean {
     const todayStr = this.today;
-    const dStr = day.toISOString().split('T')[0];
+    const dStr = this.formatDate(day);
     return dStr < todayStr;
   }
 
   isCalendarToday(day: Date): boolean {
     const todayStr = this.today;
-    return day.toISOString().split('T')[0] === todayStr;
+    return this.formatDate(day) === todayStr;
   }
 
   isCalendarRangeStart(day: Date): boolean {
-    return !!this.calendarSelectedFrom && (day.toISOString().split('T')[0] === this.calendarSelectedFrom);
+    return !!this.calendarSelectedFrom && (this.formatDate(day) === this.calendarSelectedFrom);
   }
 
   isCalendarRangeEnd(day: Date): boolean {
-    return !!this.calendarSelectedTo && (day.toISOString().split('T')[0] === this.calendarSelectedTo);
+    return !!this.calendarSelectedTo && (this.formatDate(day) === this.calendarSelectedTo);
   }
 
   isCalendarInRange(day: Date): boolean {
     if (!this.calendarSelectedFrom || !this.calendarSelectedTo) return false;
-    const d = day.toISOString().split('T')[0];
+    const d = this.formatDate(day);
     return d >= this.calendarSelectedFrom && d <= this.calendarSelectedTo;
   }
 
@@ -1115,11 +1130,11 @@ export class BookingComponent implements OnInit {
   }
 
   private buildDateRange(fromDate: string, toDate: string): string[] {
-    const start = new Date(fromDate);
-    const end = new Date(toDate);
+    const start = this.parseDateFromYMD(fromDate);
+    const end = this.parseDateFromYMD(toDate);
     const dates: string[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(d.toISOString().split('T')[0]);
+      dates.push(this.formatDate(new Date(d)));
     }
     return dates;
   }
