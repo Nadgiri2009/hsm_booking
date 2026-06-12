@@ -98,6 +98,8 @@ class Booking(models.Model):
     cgst = models.DecimalField(max_digits=12, decimal_places=2)
     sgst = models.DecimalField(max_digits=12, decimal_places=2)
     total_payable = models.DecimalField(max_digits=12, decimal_places=2)
+    addons_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    addons_summary = models.JSONField(null=True, blank=True)
 
     payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE)
     status = models.CharField(
