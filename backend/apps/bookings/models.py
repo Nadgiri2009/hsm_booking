@@ -203,3 +203,35 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.created_at} - {self.action} - {self.username or 'system'}"
+
+
+class Addon(models.Model):
+    """Optional add-on items that can be attached to a booking (chairs, decor, sound, etc.)"""
+
+    code = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=200)
+    description = models.TextField(null=True, blank=True)
+    unit_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "Addons"
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class BookingAddon(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="addons")
+    addon = models.ForeignKey(Addon, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField(default=1)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "BookingAddons"
+        indexes = [models.Index(fields=["booking"]), models.Index(fields=["addon"])]
+
+    def __str__(self):
+        return f"{self.booking.display_booking_id} - {self.addon.name} x{self.quantity}"

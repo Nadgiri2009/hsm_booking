@@ -117,6 +117,10 @@ CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors.split(",") if o.strip()] or [
     "http://127.0.0.1:4200",
 ]
 
+# During local development allow all origins so frontend served from any local port can call the API
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True

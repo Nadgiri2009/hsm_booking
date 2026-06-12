@@ -13,13 +13,14 @@ from rest_framework.views import APIView
 
 from apps.premises.models import Holiday, Premise, TimeSlot
 
-from .models import Booking, BookingAuditLog
+from .models import Booking, BookingAuditLog, Addon, BookingAddon
 from .serializers import (
     BOOKING_CONFLICT_MESSAGE,
     BookingListSerializer,
     BookingSerializer,
     CalculationSerializer,
 )
+from .serializers import AddonSerializer
 import csv
 from django.http import HttpResponse
 from django.db.models import Count, Sum
@@ -555,3 +556,49 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 
 # Removed accidental duplicate subclass definition of `BookingViewSet`.
+
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated], url_path="addons")
+    def addons(self, request, pk=None):
+        """Attach addons to an existing booking. Expects payload: { "addons": [{"addon": <id>, "quantity": <int>} ...] }
+
+        Amounts are computed server-side from `Addon.unit_charge`.
+        """
+        booking = Booking.objects.filter(pk=pk).first()
+        if not booking:
+            return Response({"error": "Booking not found"}, status=404)
+
+        data = request.data if isinstance(request.data, list) else request.data.get("addons", [])
+        from .serializers import BookingAddonSerializer
+
+        created_objs = []
+        for item in data:
+            serializer = BookingAddonSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            addon = serializer.validated_data["addon"]
+            quantity = serializer.validated_data.get("quantity", 1)
+            amount = decimal.Decimal(addon.unit_charge) * decimal.Decimal(quantity)
+            ba = serializer.save(booking=booking, amount=amount)
+            created_objs.append(ba)
+
+        # recompute total from DB to avoid float/string issues
+        total = (
+            BookingAddon.objects.filter(booking=booking).aggregate(total=Sum("amount"))[
+                "total"
+            ]
+            or decimal.Decimal("0")
+        )
+        booking.addons_total = total
+        booking.save(update_fields=["addons_total"]) 
+
+        return Response(
+            BookingAddonSerializer(created_objs, many=True).data, status=status.HTTP_201_CREATED
+        )
+
+
+class AddonListView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        addons = Addon.objects.filter(is_active=True).order_by("name")
+        return Response(AddonSerializer(addons, many=True).data)

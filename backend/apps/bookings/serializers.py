@@ -6,7 +6,21 @@ from rest_framework import serializers
 
 from apps.premises.serializers import PremiseSerializer, TimeSlotSerializer
 
-from .models import Booking
+from .models import Booking, Addon, BookingAddon
+
+
+class AddonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Addon
+        fields = ["id", "code", "name", "description", "unit_charge", "is_active"]
+
+
+class BookingAddonSerializer(serializers.ModelSerializer):
+    addon_detail = AddonSerializer(source="addon", read_only=True)
+
+    class Meta:
+        model = BookingAddon
+        fields = ["id", "addon", "addon_detail", "quantity", "amount"]
 
 BOOKING_CONFLICT_MESSAGE = (
     "No booking available for the date & time selected. "
@@ -15,6 +29,7 @@ BOOKING_CONFLICT_MESSAGE = (
 
 
 class BookingSerializer(serializers.ModelSerializer):
+    addons = BookingAddonSerializer(many=True, read_only=True)
     premise_detail = PremiseSerializer(source="premise", read_only=True)
     slot_detail = TimeSlotSerializer(source="slot", read_only=True)
 

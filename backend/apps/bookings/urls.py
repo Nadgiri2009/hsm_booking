@@ -1,7 +1,7 @@
 from django.urls import include, re_path
 from rest_framework.routers import DefaultRouter
 
-from .views import BookingViewSet
+from .views import BookingViewSet, AddonListView
 
 router = DefaultRouter(trailing_slash="/?")
 router.register("", BookingViewSet, basename="bookings")
@@ -45,6 +45,7 @@ urlpatterns = [
     re_path(
         r"^lookup/?$", BookingViewSet.as_view({"get": "lookup"}), name="booking-lookup"
     ),
+    re_path(r"^addons/?$", AddonListView.as_view(), name="addon-list"),
     re_path(
         r"^(?P<pk>[^/.]+)/receipt/?$",
         BookingViewSet.as_view({"get": "receipt"}),
