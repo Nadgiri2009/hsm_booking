@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../services/auth.service';
-
 @Component({
   selector: 'app-admin-login',
   templateUrl: './admin-login.component.html',
@@ -46,7 +45,7 @@ export class AdminLoginComponent implements OnInit {
         this.snackBar.open('Login successful!', 'Close', { duration: 2000 });
         this.router.navigate(['/admin/dashboard']);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.isLoading = false;
         const msg = err.error?.detail || 'Invalid credentials. Please try again.';
         this.snackBar.open(msg, 'Close', { duration: 4000, panelClass: ['error-snack'] });
