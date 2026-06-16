@@ -16,6 +16,16 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
         <p>Complete the booking process in 6 easy steps</p>
       </div>
 
+      <div class="pending-payment-banner" *ngIf="pendingBookingIdForPayment">
+        <div style="display:flex;gap:1rem;align-items:center;justify-content:center;margin:1rem 0;flex-wrap:wrap">
+          <div>Detected Booking ID: <strong>{{ pendingBookingIdForPayment }}</strong> — start payment?</div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="btn-next" (click)="startApprovedPayment(pendingBookingIdForPayment)">Proceed to Payment</button>
+            <button class="btn-back" (click)="pendingBookingIdForPayment = null">Ignore</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Stepper -->
       <div class="stepper">
         <div class="step" *ngFor="let s of steps; let i = index"
@@ -368,7 +378,9 @@ import { Premise, TimeSlot, BookingSummary } from '../../core/models/booking.mod
       </div>
     </div>
   `,
-  styles: [`
+  styles: [
+    `
+    .pending-payment-banner { background: #fff8e1; border: 1px solid #ffd54f; border-radius: 6px; padding: 0.5rem; margin: 0 1.5rem; text-align: center; }
     .booking-page { min-height: 100vh; background: transparent; }
     .page-header {
       background: linear-gradient(120deg, var(--ocean-deep), var(--ocean));
@@ -539,6 +551,9 @@ export class BookingComponent implements OnInit {
   conflictingDates: string[] = [];
   isAvailabilityConflict = false;
 
+  // Holds bookingId from URL when user should confirm payment before starting
+  pendingBookingIdForPayment: string | null = null;
+
   // ← ADD HERE
   calendarViewDate: Date = new Date();
   calendarSelectedFrom: string = '';
@@ -606,7 +621,8 @@ export class BookingComponent implements OnInit {
 
     const bookingId = new URLSearchParams(window.location.search).get('bookingId');
     if (bookingId) {
-      this.startApprovedPayment(bookingId);
+      // Do not auto-start payment. Save bookingId and ask user to confirm.
+      this.pendingBookingIdForPayment = bookingId;
     }
   }
 
@@ -872,10 +888,12 @@ export class BookingComponent implements OnInit {
         this.verifyAndConfirm(response);
       },
       modal: {
-        ondismiss: () => {
-          this.submitError = 'Payment cancelled. Please try again.';
-        }
-      }
+  ondismiss: () => {
+    this.submitError = 'Payment cancelled. Please try again.';
+    // ✅ Clean Razorpay URL when user closes the modal
+    window.history.replaceState({}, 'Booking', '/booking');
+  }
+}
     };
 
     const rzp = new (window as any).Razorpay(options);
@@ -883,29 +901,37 @@ export class BookingComponent implements OnInit {
   }
 
   verifyAndConfirm(response: any): void {
-    this.isSubmitting = true;
-    const payload = {
-      razorpay_order_id: response.razorpay_order_id,
-      razorpay_payment_id: response.razorpay_payment_id,
-      razorpay_signature: response.razorpay_signature,
-      booking_id: this.bookingId,
-      booking_pk: this.bookingPk
-    };
+  this.isSubmitting = true;
+  const payload = {
+    razorpay_order_id: response.razorpay_order_id,
+    razorpay_payment_id: response.razorpay_payment_id,
+    razorpay_signature: response.razorpay_signature,
+    booking_id: this.bookingId,
+    booking_pk: this.bookingPk
+  };
 
-    this.bookingService.verifyPayment(payload).subscribe({
-      next: (result: any) => {
-        this.bookingId = result?.finalBookingId || this.bookingId;
-        this.isSubmitting = false;
-        this.currentStep = 6; // show success screen
-      },
-      error: () => {
-        this.isSubmitting = false;
-        this.submitError = 'Payment verification failed. Contact support with Booking ID: ' + this.bookingId;
-      }
-    });
-  }
+  this.bookingService.verifyPayment(payload).subscribe({
+    next: (result: any) => {
+      this.bookingId = result?.finalBookingId || this.bookingId;
+      this.isSubmitting = false;
+      this.currentStep = 6; // show success screen
 
-  private startApprovedPayment(bookingId: string): void {
+      // ✅ Replace Razorpay URL in browser history so back/forward won't go to Razorpay
+      window.history.replaceState({}, 'Booking Success', '/booking');
+    },
+    error: () => {
+      this.isSubmitting = false;
+      this.submitError = 'Payment verification failed. Contact support with Booking ID: ' + this.bookingId;
+
+      // ✅ Also clean URL on error
+      window.history.replaceState({}, 'Booking', '/booking');
+    }
+  });
+}
+
+  startApprovedPayment(bookingId: string): void {
+    // clear pending banner and proceed
+    this.pendingBookingIdForPayment = null;
     this.isSubmitting = true;
     this.submitError = '';
     this.bookingService.getBookingByIdOrMobile(bookingId).subscribe({

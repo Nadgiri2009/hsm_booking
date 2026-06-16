@@ -27,5 +27,20 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     const saved = localStorage.getItem('hsm_lang') || 'en';
     this.langService.loadLanguage(saved);
+    // If user opened root or /home with a bookingId query param, strip it
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('bookingId')) {
+        const p = window.location.pathname || '/';
+        if (p === '/' || p === '/home') {
+          params.delete('bookingId');
+          const qs = params.toString();
+          const newUrl = p + (qs ? ('?' + qs) : '');
+          history.replaceState(null, '', newUrl);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 }
