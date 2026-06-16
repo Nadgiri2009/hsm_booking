@@ -61,9 +61,10 @@ class BookingSerializer(serializers.ModelSerializer):
             )
 
         if premise and slot and from_date and to_date:
-            conflicts = Booking.objects.filter(
+            # Broadly fetch bookings that overlap the requested date range for the same premise.
+            # We'll inspect timeslot-level overlaps below rather than relying on slot equality.
+            candidate_qs = Booking.objects.filter(
                 premise=premise,
-                slot=slot,
                 from_date__lte=to_date,
                 to_date__gte=from_date,
             ).filter(
@@ -80,13 +81,27 @@ class BookingSerializer(serializers.ModelSerializer):
                     status="rejected",
                     rejected_at__gt=timezone.now() - timedelta(minutes=10),
                 )
-            )
+            ).select_related('slot')
+
             if self.instance:
-                conflicts = conflicts.exclude(pk=self.instance.pk)
-            if conflicts.exists():
-                raise serializers.ValidationError(
-                    {"non_field_errors": [BOOKING_CONFLICT_MESSAGE]}
-                )
+                candidate_qs = candidate_qs.exclude(pk=self.instance.pk)
+
+            # New slot times
+            new_start = slot.start_time
+            new_end = slot.end_time
+
+            for existing in candidate_qs:
+                exist_slot = getattr(existing, 'slot', None)
+                if not exist_slot:
+                    continue
+
+                # If either booking is a full-day slot (name contains 'full'), treat as conflict
+                if (exist_slot.name or '').lower().find('full') != -1 or (slot.name or '').lower().find('full') != -1:
+                    raise serializers.ValidationError({"non_field_errors": [BOOKING_CONFLICT_MESSAGE]})
+
+                # Time overlap: existing_start < new_end AND existing_end > new_start
+                if exist_slot.start_time < new_end and exist_slot.end_time > new_start:
+                    raise serializers.ValidationError({"non_field_errors": [BOOKING_CONFLICT_MESSAGE]})
 
         return attrs
 

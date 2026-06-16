@@ -228,7 +228,8 @@ class AdminBookingApproveView(APIView):
             try:
                 from sms_api.sms_service import send_sms
                 from django.conf import settings
-                payment_link = f"http://localhost:4200/booking?bookingId={booking.booking_id}"
+                # include autoPay=true so the booking page auto-starts payment only from admin SMS link
+                payment_link = f"http://localhost:4200/booking?bookingId={booking.booking_id}&autoPay=true"
                 sms_msg = (
                     f"Dear {booking.applicant_name}, your booking {booking.booking_id} "
                     f"at Hutatma Smruti Mandir is approved. "

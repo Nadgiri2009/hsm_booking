@@ -8,7 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY should be provided via environment in production
 SECRET_KEY = os.environ.get("SECRET_KEY") or config("SECRET_KEY", default=None)
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "False"
 if not SECRET_KEY:
     if DEBUG:
         # allow a default for local development when DEBUG=True
@@ -128,6 +128,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = []  # keep empty since STATIC_ROOT is used by collectstatic
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

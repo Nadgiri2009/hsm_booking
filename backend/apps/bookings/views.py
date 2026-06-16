@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, status, viewsets, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -114,11 +114,45 @@ class BookingViewSet(viewsets.ModelViewSet):
         return BookingSerializer
 
     def perform_create(self, serializer):
+        # Perform a transaction-safe conflict check using SELECT ... FOR UPDATE
+        from datetime import timedelta as _td
+
         with transaction.atomic():
+            data = serializer.validated_data
+            premise = data.get('premise')
+            # accept either 'from_date'/'to_date' or model fields 'start_date'/'end_date'
+            from_date = data.get('from_date') or data.get('start_date')
+            to_date = data.get('to_date') or data.get('end_date')
+            slot = data.get('slot')
+
+            # Lock candidate bookings that overlap the requested date range for this premise
+            candidates = Booking.objects.select_for_update().filter(
+                premise=premise,
+                from_date__lte=to_date,
+                to_date__gte=from_date,
+            ).filter(
+                Q(status__in=ACTIVE_SLOT_STATUSES)
+                | Q(status="rejected", rejected_at__gt=timezone.now() - _td(minutes=10))
+            ).select_related('slot')
+
+            # Compare timeslot overlaps defensively
+            new_start = getattr(slot, 'start_time', None)
+            new_end = getattr(slot, 'end_time', None)
+            for existing in candidates:
+                exist_slot = getattr(existing, 'slot', None)
+                if not exist_slot:
+                    continue
+                # Full-day heuristic
+                if (exist_slot.name or '').lower().find('full') != -1 or (slot.name or '').lower().find('full') != -1:
+                    raise serializers.ValidationError({"non_field_errors": [BOOKING_CONFLICT_MESSAGE]})
+
+                if new_start and new_end and exist_slot.start_time < new_end and exist_slot.end_time > new_start:
+                    raise serializers.ValidationError({"non_field_errors": [BOOKING_CONFLICT_MESSAGE]})
+
             booking = serializer.save(
                 status="pending_approval",
                 payment_status="pending",
-                slot_locked_until=timezone.now() + timedelta(minutes=10),
+                slot_locked_until=timezone.now() + _td(minutes=10),
             )
             audit_booking(booking, "created_pending_approval")
         return booking
@@ -205,19 +239,30 @@ class BookingViewSet(viewsets.ModelViewSet):
         for i in range(delta + 1):
             d = start_dt + _td(days=i)
             date_str = d.isoformat()
+
             # bookings for this date
             day_bookings = [b for b in bookings if b.from_date <= d <= b.to_date]
-            booked_slot_ids = set(b.slot_id for b in day_bookings)
             slots_status = {}
             for s in slots:
-                slots_status[str(s.id)] = "booked" if s.id in booked_slot_ids else "available"
+                # By default the slot is available; mark booked if any existing booking
+                # for the same premise on this date has a timeslot that overlaps with s.
+                is_booked = False
+                for b in day_bookings:
+                    exist_slot = getattr(b, 'slot', None)
+                    if not exist_slot:
+                        continue
+                    # Full-day heuristic: any 'full' booking blocks all sessions
+                    if (exist_slot.name or '').lower().find('full') != -1:
+                        is_booked = True
+                        break
+                    # times overlap check
+                    if exist_slot.start_time < s.end_time and exist_slot.end_time > s.start_time:
+                        is_booked = True
+                        break
+                slots_status[str(s.id)] = 'booked' if is_booked else 'available'
 
             # detect full day booking heuristically by slot name containing 'full'
-            full_booked = False
-            for b in day_bookings:
-                if "full" in (b.slot.name or "").lower():
-                    full_booked = True
-                    break
+            full_booked = any((b.slot and 'full' in (b.slot.name or '').lower()) for b in day_bookings)
 
             conflicts = []
             if full_booked:
@@ -344,7 +389,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         )
 
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
-        payment_link = f"{frontend_url}/booking?bookingId={booking.booking_id}"
+        # include autoPay=true so the booking page auto-starts payment only from admin SMS link
+        payment_link = f"{frontend_url}/booking?bookingId={booking.booking_id}&autoPay=true"
         send_booking_message(
             booking,
             (

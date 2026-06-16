@@ -1,4 +1,5 @@
 import logging
+import os
 from django.conf import settings
 
 import razorpay
@@ -7,9 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 def _get_client():
-    key_id = getattr(settings, 'RAZORPAY_KEY_ID', None)
-    key_secret = getattr(settings, 'RAZORPAY_KEY_SECRET', None)
+    # Prefer settings (loaded via python-decouple). If empty, fallback to environment vars.
+    key_id = getattr(settings, 'RAZORPAY_KEY_ID', None) or os.environ.get('RAZORPAY_KEY_ID')
+    key_secret = getattr(settings, 'RAZORPAY_KEY_SECRET', None) or os.environ.get('RAZORPAY_KEY_SECRET')
     if not key_id or not key_secret:
+        logger.error('Razorpay credentials not configured (settings or environment)')
         raise RuntimeError('Razorpay credentials not configured')
     return razorpay.Client(auth=(key_id, key_secret))
 
@@ -27,7 +30,9 @@ def create_order(amount: int, currency: str = 'INR', receipt: str = None) -> dic
             'receipt': receipt or 'receipt_1',
             'payment_capture': 1,  # auto capture
         }
+        logger.info('payment_service.create_order: sending data to razorpay: %s', data)
         order = client.order.create(data=data)
+        logger.info('payment_service.create_order: razorpay response: %s', order)
         return {'success': True, 'order': order}
     except Exception as ex:
         logger.error('Error creating Razorpay order: %s', ex, exc_info=True)

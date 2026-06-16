@@ -60,23 +60,23 @@ def create_payment_order(request):
     except Exception:
         return HttpResponseBadRequest('amount must be an integer (paise)')
 
-    # Use ₹1 (100 paise) for testing, actual amount for production
-    import os
-    is_debug = os.environ.get('DEBUG', 'True') == 'True'
-    charge_amount = 100 if is_debug else actual_amount  # 100 paise = ₹1
-
-    # Safety check — never charge less than 100 paise
+    # Use the actual amount provided (in paise). Ensure minimum 100 paise.
     try:
-        charge_amount = int(charge_amount)
+        charge_amount = int(actual_amount)
     except Exception:
         charge_amount = 100
     charge_amount = max(charge_amount, 100)
+
+    logger.info('create_payment_order: actual_amount=%s, charge_amount=%s, currency=%s, receipt=%s', actual_amount, charge_amount, currency, receipt)
 
     
 
     res = create_order(charge_amount, currency, receipt)
     if not res.get('success'):
+        logger.error('create_payment_order: create_order failed: %s', res.get('error'))
         return JsonResponse({'error': res.get('error')}, status=500)
+
+    logger.info('create_payment_order: order created: %s', order.get('id') if (order := res.get('order')) else None)
 
     order = res.get('order')
 
